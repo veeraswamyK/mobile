@@ -1,0 +1,19 @@
+<suite name="Parallel Appium Tests" parallel="tests" thread-count="2">
+
+    <test name="Emulator1">
+        <parameter name="udid" value="emulator-5554"/>
+        <parameter name="systemPort" value="8201"/>
+        <classes>
+            <class name="runners.TestRunner"/>
+        </classes>
+    </test>
+
+    <test name="Emulator2">
+        <parameter name="udid" value="emulator-5556"/>
+        <parameter name="systemPort" value="8202"/>
+        <classes>
+            <class name="runners.TestRunner"/>
+        </classes>
+    </test>
+
+</suite>
