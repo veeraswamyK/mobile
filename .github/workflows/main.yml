@@ -23,7 +23,7 @@ on:
 jobs:
   mobile-tests:
     runs-on: windows-latest
-    environment: production
+    environment: browserstack
 
     steps:
       - name: Checkout Code
