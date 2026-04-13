@@ -1,21 +1,38 @@
-name: Mobile Cloud Run
+name: Mobile Automation Common Pipeline
 
 on:
   workflow_dispatch:
+    inputs:
+      executionType:
+        description: Execution Type
+        required: true
+        default: cloud
+        type: choice
+        options:
+          - cloud
+          - local-real
+          - hybrid
+
+      tags:
+        description: Cucumber Tags
+        required: false
+        default: @smoke
 
 jobs:
-  test:
+  mobile-tests:
     runs-on: windows-latest
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Run Cloud Tests
+      - name: Run Tests
         run: |
-          mvn clean test "-Dcucumber.filter.tags=@smoke" -DexecutionType=cloud -DbsUser=${{ secrets.BS_USER }} -DbsKey=${{ secrets.BS_KEY }} -DbsAppId=${{ secrets.BS_APP_ID }}
+          mvn clean test "-Dcucumber.filter.tags=${{ github.event.inputs.tags }}" -DexecutionType=${{ github.event.inputs.executionType }} -DbsUser=${{ secrets.BS_USER }} -DbsKey=${{ secrets.BS_KEY }} -DbsAppId=${{ secrets.BS_APP_ID }}
