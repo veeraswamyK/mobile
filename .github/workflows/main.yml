@@ -1,9 +1,15 @@
+name: Mobile Automation CI
+
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   mobile-tests:
     runs-on: windows-latest
+
+    environment: production
 
     steps:
       - name: Checkout Code
@@ -15,4 +21,18 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+
+      - name: Run Mobile Tests
         run: |
+          mvn clean test "-Dcucumber.filter.tags=@smoke" -DexecutionType=cloud -DbsUser=${{ secrets.BS_USER }} -DbsKey=${{ secrets.BS_KEY }} -DbsAppId=${{ secrets.BS_APP_ID }}
+
+      - name: Upload Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: reports/
