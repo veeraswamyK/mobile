@@ -22,8 +22,10 @@ public class TestHooks {
 
         int port = 8200;
 
-        // LOCAL DEVICES
-        if (execution.equalsIgnoreCase("local-real")
+        if (execution.equalsIgnoreCase("cloud")) {
+            System.out.println("Cloud mode: skipping device detection");
+        }
+        else if (execution.equalsIgnoreCase("local-real")
                 || execution.equalsIgnoreCase("hybrid")) {
 
             List<String> devices =
