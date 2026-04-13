@@ -68,7 +68,7 @@ public class TestHooks {
                     new ExecutionTarget(
                             "cloud",
                             "",
-                            "OnePlus 11",
+                            "OnePlus 9",
                             0
                     )
             );

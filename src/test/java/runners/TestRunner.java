@@ -1,19 +1,18 @@
 package runners;
 
+import core.ConfigManager;
 import core.TargetManager;
 import io.cucumber.testng.AbstractTestNGCucumberTests;
 import io.cucumber.testng.CucumberOptions;
 import org.testng.annotations.DataProvider;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @CucumberOptions(
         features = "src/test/resources/features",
         glue = {"stepdefinitions", "hooks"},
         plugin = {"pretty"}
 )
-public class TestRunner extends AbstractTestNGCucumberTests {
+public class TestRunner
+        extends AbstractTestNGCucumberTests {
 
     @Override
     @DataProvider(parallel = true)
@@ -21,21 +20,30 @@ public class TestRunner extends AbstractTestNGCucumberTests {
 
         Object[][] original = super.scenarios();
 
-        int targetCount = TargetManager.size();
+        String mode =
+                ConfigManager.getRunMode();
 
-        Object[][] matrix =
-                new Object[original.length * targetCount][2];
+        if (mode.equalsIgnoreCase("matrix")) {
 
-        int row = 0;
+            int targets =
+                    TargetManager.size();
 
-        for (Object[] scenario : original) {
-            for (int i = 0; i < targetCount; i++) {
-                matrix[row][0] = scenario[0];
-                matrix[row][1] = scenario[1];
-                row++;
+            Object[][] expanded =
+                    new Object[original.length * targets][2];
+
+            int row = 0;
+
+            for (Object[] scenario : original) {
+                for (int i = 0; i < targets; i++) {
+                    expanded[row][0] = scenario[0];
+                    expanded[row][1] = scenario[1];
+                    row++;
+                }
             }
+
+            return expanded;
         }
 
-        return matrix;
+        return original;
     }
 }

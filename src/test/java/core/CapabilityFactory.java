@@ -65,10 +65,10 @@ public class CapabilityFactory {
             bstack.put("userName", user);
             bstack.put("accessKey", key);
             bstack.put("projectName", "Mobile Automation");
-            bstack.put("buildName", "Build 1");
+            bstack.put("buildName", "Build 2");
             bstack.put("sessionName", "Test");
             bstack.put("deviceName", deviceName);
-            bstack.put("platformVersion", "12.0");
+//            bstack.put("platformVersion", "12.0");
 
             options.setCapability("bstack:options", bstack);
 

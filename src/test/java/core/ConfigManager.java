@@ -23,7 +23,9 @@ public class ConfigManager {
             throw new RuntimeException("Failed to load config.properties", e);
         }
     }
-
+    public static String getRunMode() {
+        return get("runMode", "distributed").trim();
+    }
     public static String get(String key, String defaultValue) {
         return getProperty(key,
                 properties.getProperty(key, defaultValue));
