@@ -1,6 +1,5 @@
 package utils;
 
-import com.google.common.collect.ImmutableMap;
 import core.DriverManager;
 import io.appium.java_client.AppiumDriver;
 import org.openqa.selenium.By;

@@ -1,4 +1,8 @@
 <suite name="Parallel Appium Tests" parallel="tests" thread-count="2">
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryListener"/>
+    </listeners>
 
     <test name="Emulator1">
         <parameter name="udid" value="emulator-5554"/>
