@@ -3,6 +3,7 @@ name: Mobile Automation Common Pipeline
 on:
   workflow_dispatch:
     inputs:
+
       executionType:
         description: Execution Type
         required: true
@@ -16,7 +17,8 @@ on:
       tags:
         description: Cucumber Tags
         required: false
-        default: @smoke
+        default: "@smoke"
+        type: string
 
 jobs:
   mobile-tests:
