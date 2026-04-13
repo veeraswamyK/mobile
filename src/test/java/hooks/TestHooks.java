@@ -1,67 +1,127 @@
 package hooks;
 
-
-import core.AppiumServerManager;
-import core.DeviceManager;
-import core.DriverFactory;
-import core.DriverManager;
-import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.options.UiAutomator2Options;
-import io.appium.java_client.service.local.AppiumDriverLocalService;
-import io.appium.java_client.service.local.AppiumServiceBuilder;
+import core.*;
 import io.cucumber.java.*;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import utils.ScreenshotUtils;
+import utils.ContextManager;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.Duration;
-
-
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestHooks {
 
+    private static final AtomicInteger counter =
+            new AtomicInteger(0);
 
     @BeforeAll
-    public static void BeforeAll()throws Exception {
-        System.out.println("===== Detecting Connected Devices =====");
+    public static void beforeAll() {
 
-        DeviceManager.setupDevices();
-        AppiumServerManager.startServer();
+        String execution =
+                ConfigManager.getExecutionType();
+
+        TargetManager.clear();
+
+        int port = 8200;
+
+        if (execution.equalsIgnoreCase("cloud")) {
+            System.out.println("Cloud mode: skipping device detection");
+        }
+        else if (execution.equalsIgnoreCase("local-real")
+                || execution.equalsIgnoreCase("hybrid")) {
+
+            List<String> devices =
+                    DeviceManager.getConnectedDevices();
+
+            for (String udid : devices) {
+
+                TargetManager.addTarget(
+                        new ExecutionTarget(
+                                "local",
+                                udid,
+                                udid,
+                                port++
+                        )
+                );
+            }
+        }
+
+        // CLOUD DEVICES
+        if (execution.equalsIgnoreCase("cloud")
+                || execution.equalsIgnoreCase("hybrid")) {
+
+            TargetManager.addTarget(
+                    new ExecutionTarget(
+                            "cloud",
+                            "",
+                            "Samsung Galaxy S22",
+                            0
+                    )
+            );
+
+            TargetManager.addTarget(
+                    new ExecutionTarget(
+                            "cloud",
+                            "",
+                            "Google Pixel 7",
+                            0
+                    )
+            );
+
+            TargetManager.addTarget(
+                    new ExecutionTarget(
+                            "cloud",
+                            "",
+                            "OnePlus 9",
+                            0
+                    )
+            );
+        }
+
+        if (TargetManager.size() == 0) {
+            throw new RuntimeException(
+                    "No execution targets found");
+        }
+
+        System.out.println(
+                "Targets Found: "
+                        + TargetManager.size());
     }
-
 
     @Before
-    public void setUp(Scenario scenario) throws Exception {
+    public void setUp(Scenario scenario) {
 
-        System.out.println("Starting Scenario: " + scenario.getName());
+        int index =
+                counter.getAndIncrement()
+                        % TargetManager.size();
 
-        AppiumDriver driver = DriverFactory.initDriver();
+        ExecutionTarget target =
+                TargetManager.getTarget(index);
 
-        DriverManager.setDriver(driver);
+        System.out.println(
+                "Scenario: "
+                        + scenario.getName());
+
+        System.out.println(
+                "Running On: "
+                        + target.deviceName);
+
+        DriverFactory.initDriver(
+                target.type,
+                target.udid,
+                target.deviceName,
+                target.systemPort
+        );
     }
-
 
     @After
-    public void tearDown(Scenario scenario) {
+    public void tearDown() {
 
-        if (scenario.isFailed()) {
-
-            String screenshotName = scenario.getName().replaceAll(" ", "_");
-            ScreenshotUtils.capture(screenshotName);
-            byte[] screenshot = ((TakesScreenshot) DriverManager.getDriver())
-                    .getScreenshotAs(OutputType.BYTES);
-            scenario.attach(screenshot, "image/png", screenshotName);
-        }
         DriverManager.quitDriver();
+        ContextManager.unload();
     }
+
     @AfterAll
-    public static void AfterAll() {
+    public static void afterAll() {
+
         AppiumServerManager.stopServer();
     }
 }
-
-

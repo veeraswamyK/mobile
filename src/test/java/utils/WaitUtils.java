@@ -13,4 +13,8 @@ public class WaitUtils {
         WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(10));
         wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
+    public static WebDriverWait getWait() {
+        return new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(10));
+    }
+
 }

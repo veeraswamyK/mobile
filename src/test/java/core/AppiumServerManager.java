@@ -12,7 +12,7 @@ public class AppiumServerManager {
     public static void startServer() {
         if (service == null || !service.isRunning()) {
             service = new AppiumServiceBuilder()
-                    .withAppiumJS(new File("C:\\Users\\Admin\\AppData\\Roaming\\npm\\node_modules\\appium\\build\\lib\\main.js"))
+
                     .withIPAddress("127.0.0.1")
                     .usingPort(4723)
                     .build();
