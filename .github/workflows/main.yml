@@ -1,29 +1,9 @@
-name: Mobile Automation Common Pipeline
-
 on:
   workflow_dispatch:
-    inputs:
-
-      executionType:
-        description: Execution Type
-        required: true
-        default: cloud
-        type: choice
-        options:
-          - cloud
-          - local-real
-          - hybrid
-
-      tags:
-        description: Cucumber Tags
-        required: false
-        default: "@smoke"
-        type: string
 
 jobs:
   mobile-tests:
     runs-on: windows-latest
-    environment: browserstack
 
     steps:
       - name: Checkout Code
@@ -35,6 +15,4 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Run Tests
         run: |
-          mvn clean test "-Dcucumber.filter.tags=${{ github.event.inputs.tags }}" -DexecutionType=${{ github.event.inputs.executionType }} -DbsUser=${{ secrets.BS_USER }} -DbsKey=${{ secrets.BS_KEY }} -DbsAppId=${{ secrets.BS_APP_ID }}
