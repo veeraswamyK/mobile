@@ -24,7 +24,7 @@ public class CapabilityFactory {
 
             String appPath =
                     System.getProperty("user.dir")
-                            + "/apps/app.apk";
+                            + "/apps/Pra.apk";
 
             options.setUdid(udid);
             options.setDeviceName(deviceName);
