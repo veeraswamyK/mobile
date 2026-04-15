@@ -1,0 +1,10 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Dynamic Suite" parallel="tests" thread-count="1">
+<test name="Device_1">
+<parameter name="udid" value="adb-RZ8R12B5L5H-ptoOBA._adb-tls-connect._tcp"/>
+<parameter name="systemPort" value="8200"/>
+<classes>
+<class name="runners.TestRunner"/>
+</classes>
+</test>
+</suite>
