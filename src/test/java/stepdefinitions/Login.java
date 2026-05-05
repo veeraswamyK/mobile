@@ -1,46 +1,43 @@
 package stepdefinitions;
 
-import io.cucumber.java.PendingException;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.qameta.allure.Step;
 import org.testng.Assert;
-import org.testng.asserts.SoftAssert;
 import pages.LoginPage;
 import pages.ProductsPage;
-import utils.LoggerUtil;
 
 public class Login {
 
-    LoginPage loginPage = new LoginPage();
-    ProductsPage productPage=new ProductsPage();
-    SoftAssert soft=new SoftAssert();
+    private final LoginPage loginPage     = new LoginPage();
+    private final ProductsPage productsPage = new ProductsPage();
 
     @Given("user logs in with username {string} and password {string}")
+    @Step("Login with username='{0}' and password='***'")
     public void login(String username, String password) {
         loginPage.login(username, password);
     }
 
-
-
-    @Then("Error message should display")
-    public void errorMessageShouldDisplay() {
-        String a=productPage.pageName();
-        LoggerUtil.info("will execute");
-        Assert.assertEquals(a,"PRODUCTS","wrong page displayed");
-        LoggerUtil.info("soft assertion passed this line prints ");
-        Assert.assertTrue(productPage.ProductPageIsDisplayed(),"products page is not displayed");
+    @Then("products page is displayed")
+    public void productsPageIsDisplayed() {
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page not displayed after login");
     }
 
     @Then("products page is result {string}")
-    public void productsPageIsResult(String result) {
-
-            if (result.equalsIgnoreCase("Displayed")) {
-                Assert.assertTrue(productPage.ProductPageIsDisplayed(),
-                        "Expected Products page, but not displayed");
-            } else {
-                Assert.assertTrue(loginPage.LoginPageIsDisplayed(),
-                        "User should remain on login page");
-            }
+    public void productsPageIsResult(String expectedResult) {
+        if (expectedResult.equalsIgnoreCase("Displayed")) {
+            Assert.assertTrue(productsPage.isDisplayed(),
+                    "Expected Products page to be displayed but it was not");
+        } else {
+            Assert.assertTrue(loginPage.isDisplayed(),
+                    "Expected user to remain on the Login page");
         }
     }
 
+    @Then("Error message should display")
+    public void errorMessageShouldDisplay() {
+        Assert.assertTrue(loginPage.isErrorMessageDisplayed(),
+                "Expected error message to be displayed for invalid login");
+    }
+}

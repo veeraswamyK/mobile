@@ -1,35 +1,40 @@
 package core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class TargetManager {
+public final class TargetManager {
 
-    private static final List<ExecutionTarget> targets =
-            new ArrayList<>();
+    private static final Logger LOG = LoggerFactory.getLogger(TargetManager.class);
+    private static final List<ExecutionTarget> TARGETS = new ArrayList<>();
 
-    private TargetManager() {
-    }
+    private TargetManager() {}
 
-    public static void addTarget(
-            ExecutionTarget target) {
-
-        targets.add(target);
+    public static synchronized void addTarget(ExecutionTarget target) {
+        TARGETS.add(target);
+        LOG.info("Registered target: {}", target);
     }
 
     public static List<ExecutionTarget> getTargets() {
-        return targets;
+        return Collections.unmodifiableList(TARGETS);
     }
 
     public static ExecutionTarget getTarget(int index) {
-        return targets.get(index);
+        if (index < 0 || index >= TARGETS.size()) {
+            throw new IndexOutOfBoundsException("No target at index " + index + ". Total: " + TARGETS.size());
+        }
+        return TARGETS.get(index);
     }
 
     public static int size() {
-        return targets.size();
+        return TARGETS.size();
     }
 
-    public static void clear() {
-        targets.clear();
+    public static synchronized void clear() {
+        TARGETS.clear();
     }
 }

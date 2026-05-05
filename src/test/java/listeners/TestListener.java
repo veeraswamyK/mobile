@@ -1,29 +1,38 @@
 package listeners;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import utils.ScreenshotUtils;
 
 public class TestListener implements ITestListener {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TestListener.class);
+
     @Override
     public void onTestStart(ITestResult result) {
-        System.out.println("Test Started: " + result.getName());
+        LOG.info("▶ Test started : {}", result.getName());
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        System.out.println("Test Passed: " + result.getName());
+        LOG.info("✔ Test passed  : {} ({} ms)", result.getName(), elapsedMs(result));
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        System.out.println("Test Failed: " + result.getName());
+        LOG.error("✘ Test failed  : {} — {}", result.getName(),
+                result.getThrowable() != null ? result.getThrowable().getMessage() : "no message");
         ScreenshotUtils.capture(result.getName());
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        System.out.println("Test Skipped: " + result.getName());
+        LOG.warn("⚠ Test skipped : {}", result.getName());
+    }
+
+    private long elapsedMs(ITestResult result) {
+        return result.getEndMillis() - result.getStartMillis();
     }
 }

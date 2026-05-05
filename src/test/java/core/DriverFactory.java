@@ -1,44 +1,41 @@
 package core;
 
+import constants.MobileConstants;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
-import java.time.Duration;
 
-public class DriverFactory {
+public final class DriverFactory {
 
-    public static void initDriver(
-            String type,
-            String udid,
-            String deviceName,
-            int systemPort) {
+    private static final Logger LOG = LoggerFactory.getLogger(DriverFactory.class);
 
+    private DriverFactory() {}
+
+    public static void initDriver(String executionType, String udid, String deviceName, int systemPort) {
         try {
+            URL serverUrl = resolveServerUrl(executionType);
+            UiAutomator2Options options = CapabilityFactory.getCapabilities(executionType, udid, deviceName, systemPort);
 
-            URL url;
+            LOG.info("Initialising AndroidDriver → {}", serverUrl);
+            AndroidDriver driver = new AndroidDriver(serverUrl, options);
 
-            if (type.equals("cloud")) {
-                url = new URL(ConfigManager.getCloudUrl());
-            } else {
-                AppiumServerManager.startServer();
-                url = new URL(AppiumServerManager.getServerUrl());
-            }
-
-            UiAutomator2Options options =
-                    CapabilityFactory.getCapabilities(
-                            type, udid, deviceName, systemPort);
-
-            AndroidDriver driver =
-                    new AndroidDriver(url, options);
-
-            driver.manage().timeouts()
-                    .implicitlyWait(Duration.ofSeconds(5));
-
+            // No implicit wait — use explicit waits via WaitUtils throughout
             DriverManager.setDriver(driver);
+            LOG.info("Driver initialised for device: {}", deviceName);
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to initialise driver for device: " + deviceName, e);
         }
+    }
+
+    private static URL resolveServerUrl(String executionType) throws Exception {
+        if (executionType.equalsIgnoreCase(MobileConstants.EXEC_CLOUD)) {
+            return new URL(ConfigManager.getCloudUrl());
+        }
+        AppiumServerManager.startServer();
+        return new URL(AppiumServerManager.getServerUrl());
     }
 }

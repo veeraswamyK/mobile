@@ -1,15 +1,18 @@
 package stepdefinitions;
 
 import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import io.qameta.allure.Step;
+import org.testng.Assert;
 import pages.SuccessPage;
 
 public class Success {
 
-    SuccessPage successPage = new SuccessPage();
+    private final SuccessPage successPage = new SuccessPage();
 
     @Then("Product purchase is displayed")
-    public void SuccessEle() {
-        successPage.messageElement();
+    @Step("Verify order success page is displayed")
+    public void verifyOrderSuccess() {
+        Assert.assertTrue(successPage.isDisplayed(),
+                "Order success page should be displayed after completing checkout");
     }
 }

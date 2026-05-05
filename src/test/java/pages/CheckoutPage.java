@@ -1,43 +1,47 @@
 package pages;
 
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
-import utils.GestureUtils;
-
-import static utils.WaitUtils.waitForElement;
 
 public class CheckoutPage extends BasePage {
 
-    private By firstName = By.xpath("//android.widget.EditText[@content-desc='test-First Name']");
-    private By lastName = By.xpath("//android.widget.EditText[@content-desc='test-Last Name']");
-    private By zip = By.xpath("//android.widget.EditText[@content-desc='test-Zip/Postal Code']");
-    private By continueBtn = By.xpath("//android.widget.TextView[@text='CONTINUE']");
-    private By finishBtn = By.xpath("//android.widget.TextView[@text='FINISH']");
-    private By checkOut = AppiumBy.accessibilityId("test-CHECKOUT");
-    private By cancel = AppiumBy.accessibilityId("test-CANCEL");
-    public void enterDetails(String fName, String lName, String zipCode) {
-        waitForElement(firstName);
-        type(firstName, fName);
-        type(lastName, lName);
-        type(zip, zipCode);
-        click(continueBtn);
-    }
-    public void clickContinueShopping() {
+    private static final By FIRST_NAME   = By.xpath("//android.widget.EditText[@content-desc='test-First Name']");
+    private static final By LAST_NAME    = By.xpath("//android.widget.EditText[@content-desc='test-Last Name']");
+    private static final By ZIP_CODE     = By.xpath("//android.widget.EditText[@content-desc='test-Zip/Postal Code']");
+    private static final By CONTINUE_BTN = By.xpath("//android.widget.TextView[@text='CONTINUE']");
+    private static final By FINISH_BTN   = By.xpath("//android.widget.TextView[@text='FINISH']");
+    private static final By CANCEL_BTN   = AppiumBy.accessibilityId("test-CANCEL");
+    private static final By CHECKOUT_HDR = AppiumBy.accessibilityId("test-CHECKOUT: YOUR INFORMATION");
 
-        click(continueBtn);
-    }
-    public boolean isCheckoutPageDisplayed() {
-        click(checkOut);
-        return isTargetPageLoaded(checkOut);
+    @Step("Enter checkout details: {firstName} {lastName} {zipCode}")
+    public void enterDetails(String firstName, String lastName, String zipCode) {
+        waitUntilVisible(FIRST_NAME);
+        type(FIRST_NAME, firstName);
+        type(LAST_NAME, lastName);
+        type(ZIP_CODE, zipCode);
+        hideKeyboard();
+        click(CONTINUE_BTN);
     }
 
-
+    @Step("Finish order")
     public void finishOrder() {
-        GestureUtils.scrollToElement(finishBtn);
-        click(finishBtn);
+        scrollToElement(FINISH_BTN);
+        click(FINISH_BTN);
     }
-    public void clickCancel() {
 
-        click(cancel);
+    @Step("Click Continue")
+    public void clickContinue() {
+        click(CONTINUE_BTN);
+    }
+
+    @Step("Click Cancel on checkout")
+    public void clickCancel() {
+        click(CANCEL_BTN);
+    }
+
+    @Step("Verify checkout page is displayed")
+    public boolean isDisplayed() {
+        return isVisible(CHECKOUT_HDR);
     }
 }

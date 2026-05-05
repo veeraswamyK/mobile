@@ -1,35 +1,51 @@
 package core;
 
+import constants.FrameworkConstants;
 import io.appium.java_client.service.local.AppiumDriverLocalService;
 import io.appium.java_client.service.local.AppiumServiceBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
+public final class AppiumServerManager {
 
-public class AppiumServerManager {
-
+    private static final Logger LOG = LoggerFactory.getLogger(AppiumServerManager.class);
     private static AppiumDriverLocalService service;
+    private static final Object LOCK = new Object();
+
+    private AppiumServerManager() {}
 
     public static void startServer() {
-        if (service == null || !service.isRunning()) {
+        synchronized (LOCK) {
+            if (service != null && service.isRunning()) {
+                LOG.debug("Appium server already running at {}", getServerUrl());
+                return;
+            }
             service = new AppiumServiceBuilder()
-
-                    .withIPAddress("127.0.0.1")
-                    .usingPort(4723)
+                    .withIPAddress(FrameworkConstants.APPIUM_HOST)
+                    .usingPort(FrameworkConstants.APPIUM_PORT)
                     .build();
             service.start();
-
-            System.out.println("Appium Server Started: " + getServerUrl());
+            LOG.info("Appium server started at {}", getServerUrl());
         }
     }
 
     public static void stopServer() {
-        if (service != null && service.isRunning()) {
-            service.stop();
-            System.out.println("Appium Server Stopped");
+        synchronized (LOCK) {
+            if (service != null && service.isRunning()) {
+                service.stop();
+                LOG.info("Appium server stopped");
+            }
         }
     }
 
     public static String getServerUrl() {
-        return service.getUrl().toString().replace("0.0.0.0", "127.0.0.1");
+        if (service == null) {
+            throw new IllegalStateException("Appium server has not been started.");
+        }
+        return service.getUrl().toString().replace("0.0.0.0", FrameworkConstants.APPIUM_HOST);
+    }
+
+    public static boolean isRunning() {
+        return service != null && service.isRunning();
     }
 }

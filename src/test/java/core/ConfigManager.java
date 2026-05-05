@@ -1,61 +1,118 @@
 package core;
 
+import constants.FrameworkConstants;
+import constants.MobileConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.InputStream;
 import java.util.Properties;
 
-import static java.lang.System.getProperty;
+public final class ConfigManager {
 
-public class ConfigManager {
-
-    private static final Properties properties = new Properties();
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigManager.class);
+    private static final Properties PROPS = new Properties();
 
     static {
-        try {
-            InputStream input = ConfigManager.class
-                    .getClassLoader()
-                    .getResourceAsStream("config/config.properties");
-
-            if (input != null) {
-                properties.load(input);
+        try (InputStream input = ConfigManager.class.getClassLoader()
+                .getResourceAsStream(FrameworkConstants.CONFIG_FILE)) {
+            if (input == null) {
+                throw new RuntimeException("config.properties not found on classpath: " + FrameworkConstants.CONFIG_FILE);
             }
-
+            PROPS.load(input);
+            LOG.info("Loaded config from: {}", FrameworkConstants.CONFIG_FILE);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load config.properties", e);
         }
     }
-    public static String getRunMode() {
-        return get("runMode", "distributed").trim();
-    }
+
+    private ConfigManager() {}
+
+    /**
+     * Reads a property, giving precedence to JVM system properties over the file.
+     * Environment variables are checked last as a fallback.
+     */
     public static String get(String key, String defaultValue) {
-        return getProperty(key,
-                properties.getProperty(key, defaultValue));
+        String sysProp = System.getProperty(key);
+        if (sysProp != null && !sysProp.isBlank()) {
+            return sysProp.trim();
+        }
+        String fileProp = PROPS.getProperty(key);
+        if (fileProp != null && !fileProp.isBlank()) {
+            return fileProp.trim();
+        }
+        String envProp = System.getenv(key.toUpperCase().replace(".", "_"));
+        if (envProp != null && !envProp.isBlank()) {
+            return envProp.trim();
+        }
+        return defaultValue;
     }
+
+    // ---- Execution ----
 
     public static String getExecutionType() {
-        return get("executionType", "local-emulator").trim();
-    }
-    public static String getBsUser() {
-        return properties.getProperty("bsUser");
+        return get("executionType", MobileConstants.EXEC_LOCAL_EMULATOR);
     }
 
-    public static String getBsKey() {
-        return properties.getProperty("bsKey");
+    public static String getRunMode() {
+        return get("runMode", "distributed");
     }
 
-    public static String getBsAppId() {
-        return properties.getProperty("bsAppId");
+    public static String getPlatform() {
+        return get("platform", MobileConstants.PLATFORM_ANDROID);
     }
-    public static String getUdid() {
-        return get("udid", "");
-    }
+
+    // ---- Device ----
 
     public static String getDeviceName() {
         return get("deviceName", "Android Emulator");
     }
 
-    public static String getCloudUrl() {
-        return get("cloudUrl",
-                "https://hub-cloud.browserstack.com/wd/hub");
+    public static String getUdid() {
+        return get("udid", "emulator-5554");
     }
 
+    public static int getSystemPort() {
+        return Integer.parseInt(get("systemPort", "8200"));
+    }
+
+    // ---- App ----
+
+    public static String getAppPath() {
+        String configured = get("appPath", MobileConstants.APP_APK_NAME);
+        if (!configured.startsWith("/") && !configured.contains(":\\")) {
+            return System.getProperty("user.dir") + "/" + configured;
+        }
+        return configured;
+    }
+
+    // ---- BrowserStack (read from env vars in CI; file only for local dev) ----
+
+    public static String getBsUser() {
+        String user = get("bsUser", "");
+        if (user.isEmpty()) {
+            throw new RuntimeException("BrowserStack username (bsUser) is not configured.");
+        }
+        return user;
+    }
+
+    public static String getBsKey() {
+        String key = get("bsKey", "");
+        if (key.isEmpty()) {
+            throw new RuntimeException("BrowserStack access key (bsKey) is not configured.");
+        }
+        return key;
+    }
+
+    public static String getBsAppId() {
+        String appId = get("bsAppId", "");
+        if (appId.isEmpty()) {
+            throw new RuntimeException("BrowserStack app ID (bsAppId) is not configured.");
+        }
+        return appId;
+    }
+
+    public static String getCloudUrl() {
+        return get("cloudUrl", MobileConstants.BS_CLOUD_URL);
+    }
 }

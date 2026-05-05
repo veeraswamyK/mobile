@@ -1,142 +1,143 @@
 package pages;
 
-import core.DriverManager;
+import constants.FrameworkConstants;
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import utils.WaitUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static utils.WaitUtils.*;
-
-
 public class ProductsPage extends BasePage {
 
-    private By firstProductAddToCart = By.xpath("(//android.widget.TextView[@text='ADD TO CART'])[1]");
-    private By cartIcon = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']");
-    private By productpage = By.xpath("//android.widget.TextView[@text='PRODUCTS']");
-    private By viewButton = AppiumBy.accessibilityId("test-Toggle");
-    private By filterButton = AppiumBy.accessibilityId("test-Modal Selector Button");
-    private By cartCount = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
-    private By secondProductAddToCart = By.xpath("(//android.widget.TextView[@text='ADD TO CART'])[1]");
+    private static final By PAGE_TITLE       = By.xpath("//android.widget.TextView[@text='PRODUCTS']");
+    private static final By FIRST_ADD_CART   = By.xpath("(//android.widget.TextView[@text='ADD TO CART'])[1]");
+    private static final By SECOND_ADD_CART  = By.xpath("(//android.widget.TextView[@text='ADD TO CART'])[2]");
+    private static final By ALL_ADD_CART     = By.xpath("//android.widget.TextView[@text='ADD TO CART']");
+    private static final By CART_ICON        = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']");
+    private static final By CART_COUNT       = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
+    private static final By VIEW_TOGGLE      = AppiumBy.accessibilityId("test-Toggle");
+    private static final By FILTER_BTN       = AppiumBy.accessibilityId("test-Modal Selector Button");
+    private static final By SORT_POPUP_TITLE = By.xpath("//android.widget.TextView[@text='Sort Items']");
+    private static final By PRODUCT_NAMES    = By.xpath("//android.widget.TextView[@content-desc='test-Item title']");
+    private static final By PRODUCT_PRICES   = By.xpath("//android.widget.TextView[@content-desc='test-Price']");
+    private static final By LIST_VIEW_IMGS   = By.xpath("//android.widget.ImageView");
 
+    @Step("Verify Products page is displayed")
+    public boolean isDisplayed() {
+        return isVisible(PAGE_TITLE);
+    }
 
+    @Step("Get Products page title")
+    public String getPageTitle() {
+        return getText(PAGE_TITLE);
+    }
+
+    @Step("Add first product to cart")
     public void addFirstProductToCart() {
-        waitForElement(firstProductAddToCart);
-        click(firstProductAddToCart);
+        waitUntilVisible(FIRST_ADD_CART);
+        click(FIRST_ADD_CART);
     }
-    public  void addSecondProductToCart(){
-        waitForElement(secondProductAddToCart);
-        click(secondProductAddToCart);
+
+    @Step("Add second product to cart")
+    public void addSecondProductToCart() {
+        waitUntilVisible(SECOND_ADD_CART);
+        click(SECOND_ADD_CART);
     }
-    public List<Double> addMultipleProductsAndGetPrices(){
-        List<Double> prices = new ArrayList<>();
 
-        // Locate all product price elements
-        List<WebElement> priceElements = driver.findElements(
-                By.xpath("//android.widget.TextView[@content-desc='test-Price']")
-        );
+    /**
+     * Adds all visible products to cart and returns their prices captured before clicking.
+     */
+    @Step("Add all visible products to cart and return their prices")
+    public List<Double> addAllProductsAndGetPrices() {
+        List<WebElement> priceElements = findAllVisible(PRODUCT_PRICES);
+        List<Double> prices = priceElements.stream()
+                .map(e -> parsePrice(e.getText()))
+                .collect(Collectors.toList());
 
-        // Locate all Add to Cart buttons
-        List<WebElement> addButtons = driver.findElements(
-                By.xpath("//android.widget.TextView[@text='ADD TO CART']")
-        );
-
-        for (int i = 0; i < addButtons.size(); i++) {
-
-            // 🎯 Capture price BEFORE clicking
-            String priceText = priceElements.get(i).getText();
-
-            double price = Double.parseDouble(priceText.replace("$", "").trim());
-
-            prices.add(price);
-
-            // 🛒 Add product to cart
-            addButtons.get(i).click();
-        }
-
+        findAll(ALL_ADD_CART).forEach(WebElement::click);
         return prices;
     }
-    public int getCartCountSafe() {
-        if (DriverManager.getDriver().findElements(cartCount).size() > 0) {
-            String text = new CartPage().countOfProducts().trim();
-            return Integer.parseInt(text.replaceAll("[^0-9]", ""));
+
+    @Step("Get current cart item count (0 if badge absent)")
+    public int getCartCount() {
+        List<WebElement> badge = findAll(CART_COUNT);
+        if (badge.isEmpty()) return 0;
+        try {
+            return Integer.parseInt(badge.get(0).getText().replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return 0;
         }
-        return 0;
-    }
-    public boolean verifyProductCount() {
-
-        int initialCount = getCartCountSafe();
-
-        click(firstProductAddToCart);
-
-
-        boolean isUpdated = getWait().until(driver ->
-                getCartCountSafe() > initialCount
-        );
-
-        int finalCount = getCartCountSafe();
-
-        return isUpdated && finalCount > initialCount;
     }
 
+    /**
+     * Clicks "ADD TO CART" on the first product and waits for the cart badge to increment.
+     */
+    @Step("Add first product to cart and verify badge increments")
+    public boolean addProductAndVerifyCount() {
+        int before = getCartCount();
+        click(FIRST_ADD_CART);
+        return WaitUtils.getFluentWait(FrameworkConstants.EXPLICIT_WAIT_SECONDS)
+                .until(d -> getCartCount() > before);
+    }
+
+    @Step("Navigate to cart")
     public void goToCart() {
-        waitForElement(cartIcon);
-        click(cartIcon);
-    }
-    public  boolean ProductPageIsDisplayed() {
-       return isTargetPageLoaded(productpage);
+        click(CART_ICON);
     }
 
-
-    public String pageName(){
-        return getText(productpage);
-    }
-    public void clickView(){
-        click(viewButton);
-    }
-    public void clickFilter(){
-        click(filterButton);
-    }
-    public String getFirstProductName() {
-        return getText(By.xpath("(//android.widget.TextView[@content-desc='test-Item title'])[1]"));
+    @Step("Click view toggle button")
+    public void clickViewToggle() {
+        click(VIEW_TOGGLE);
     }
 
-    public List<String> getProductNames() {
-        List<WebElement> elements = driver.findElements(
-                By.xpath("//android.widget.TextView[@content-desc='test-Item title']")
-        );
-
-        return elements.stream()
-                .map(WebElement::getText)
-                .collect(Collectors.toList());
+    @Step("Open filter / sort dialog")
+    public void clickFilter() {
+        click(FILTER_BTN);
     }
-    // Get product prices
-    public List<Double> getProductPrices() {
-        List<WebElement> elements = driver.findElements(
-                By.xpath("//android.widget.TextView[@content-desc='test-Price']")
-        );
 
-        return elements.stream()
-                .map(e -> Double.parseDouble(e.getText().replace("$", "")))
-                .collect(Collectors.toList());
-    }
+    @Step("Check sort popup is displayed")
     public boolean isSortPopupDisplayed() {
-        return isDisplayed(By.xpath("//android.widget.TextView[@text='Sort Items']"));
+        return isVisible(SORT_POPUP_TITLE);
     }
 
-
-
+    @Step("Select filter/sort option: {option}")
     public void selectFilterOption(String option) {
         click(By.xpath("//android.widget.TextView[@text='" + option + "']"));
     }
+
+    @Step("Cancel sort dialog")
     public void clickCancel() {
         click(By.xpath("//android.widget.TextView[@text='Cancel']"));
     }
+
+    @Step("Get name of the first product")
+    public String getFirstProductName() {
+        return findAll(PRODUCT_NAMES).get(0).getText();
+    }
+
+    @Step("Get all product names")
+    public List<String> getProductNames() {
+        return findAll(PRODUCT_NAMES).stream()
+                .map(WebElement::getText)
+                .collect(Collectors.toList());
+    }
+
+    @Step("Get all product prices as doubles")
+    public List<Double> getProductPrices() {
+        return findAll(PRODUCT_PRICES).stream()
+                .map(e -> parsePrice(e.getText()))
+                .collect(Collectors.toList());
+    }
+
+    @Step("Check list view is active")
     public boolean isListView() {
-        return driver.findElements(By.xpath("//android.widget.ImageView")).size() > 0;
+        return !findAll(LIST_VIEW_IMGS).isEmpty();
+    }
+
+    private double parsePrice(String priceText) {
+        return Double.parseDouble(priceText.replace("$", "").trim());
     }
 }
-
