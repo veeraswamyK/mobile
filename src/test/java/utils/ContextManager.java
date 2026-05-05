@@ -1,15 +1,18 @@
 package utils;
 
-public class ContextManager {
+public final class ContextManager {
 
-    private static ThreadLocal<TextContext> scenarioContext =
+    private static final ThreadLocal<TextContext> CONTEXT =
             ThreadLocal.withInitial(TextContext::new);
 
+    private ContextManager() {}
+
     public static TextContext getContext() {
-        return scenarioContext.get();
+        return CONTEXT.get();
     }
 
     public static void unload() {
-        scenarioContext.remove();
+        CONTEXT.get().clear();
+        CONTEXT.remove();
     }
 }

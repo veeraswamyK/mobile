@@ -1,5 +1,14 @@
 target/
+test-output/
+allure-report/
 !.mvn/wrapper/maven-wrapper.jar
+
+# Never commit credentials or secrets
+*.env
+.env.local
+
+# APK files (large binaries — store in artifact registry)
+apps/*.apk
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin

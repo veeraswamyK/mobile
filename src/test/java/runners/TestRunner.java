@@ -8,31 +8,26 @@ import org.testng.annotations.DataProvider;
 
 @CucumberOptions(
         features = "src/test/resources/features",
-        glue = {"stepdefinitions", "hooks"},
-        plugin = {"pretty"}
+        glue     = {"stepdefinitions", "hooks"},
+        plugin   = {
+                "pretty",
+                "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm",
+                "json:target/cucumber-reports/cucumber.json",
+                "html:target/cucumber-reports/cucumber.html"
+        },
+        monochrome = true
 )
-public class TestRunner
-        extends AbstractTestNGCucumberTests {
+public class TestRunner extends AbstractTestNGCucumberTests {
 
     @Override
     @DataProvider(parallel = true)
     public Object[][] scenarios() {
-
         Object[][] original = super.scenarios();
 
-        String mode =
-                ConfigManager.getRunMode();
-
-        if (mode.equalsIgnoreCase("matrix")) {
-
-            int targets =
-                    TargetManager.size();
-
-            Object[][] expanded =
-                    new Object[original.length * targets][2];
-
+        if ("matrix".equalsIgnoreCase(ConfigManager.getRunMode())) {
+            int targets = TargetManager.size();
+            Object[][] expanded = new Object[original.length * targets][2];
             int row = 0;
-
             for (Object[] scenario : original) {
                 for (int i = 0; i < targets; i++) {
                     expanded[row][0] = scenario[0];
@@ -40,7 +35,6 @@ public class TestRunner
                     row++;
                 }
             }
-
             return expanded;
         }
 

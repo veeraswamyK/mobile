@@ -1,64 +1,71 @@
 package pages;
 
 import io.appium.java_client.AppiumBy;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static utils.WaitUtils.waitForElement;
-
 public class CartPage extends BasePage {
 
+    private static final By CHECKOUT_BTN  = By.xpath("//android.view.ViewGroup[@content-desc='test-CHECKOUT']");
+    private static final By CART_ICON     = AppiumBy.accessibilityId("test-Cart");
+    private static final By CART_COUNT    = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
+    private static final By REMOVE_BTN    = AppiumBy.androidUIAutomator("new UiSelector().text('REMOVE')");
+    private static final By TOTAL_PRICE   = AppiumBy.accessibilityId("test-Price");
+    private static final By CART_ITEMS    = By.xpath("//android.widget.TextView[@content-desc='test-Item title']");
+    private static final By CONTINUE_SHOP = By.xpath("//android.widget.TextView[@text='CONTINUE SHOPPING']");
 
-    private By checkoutBtn = By.xpath("//android.view.ViewGroup[@content-desc='test-CHECKOUT']");
-    private By cartIcon = AppiumBy.accessibilityId("test-Cart");
-    private By cartCount = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
-    private By remove=AppiumBy.androidUIAutomator("new UiSelector().text('REMOVE')");
-    private By totalPrice= AppiumBy.accessibilityId("test-Price");
-
+    @Step("Click Checkout button")
     public void clickCheckout() {
-        waitForElement(checkoutBtn);
-        click(checkoutBtn);
+        waitUntilVisible(CHECKOUT_BTN);
+        click(CHECKOUT_BTN);
     }
 
+    @Step("Click Cart icon")
+    public void clickCartIcon() {
+        click(CART_ICON);
+    }
 
+    @Step("Get total price from cart")
     public double getTotalPrice() {
+        waitUntilVisible(TOTAL_PRICE);
+        String text = getText(TOTAL_PRICE).replaceAll("[^0-9.]", "");
+        return Double.parseDouble(text);
+    }
+
+    @Step("Get cart item count (0 if badge absent)")
+    public int getCartCount() {
+        List<WebElement> badge = findAll(CART_COUNT);
+        if (badge.isEmpty()) return 0;
         try {
-            waitForElement(totalPrice);
-
-            String totalText = getText(totalPrice).trim();
-
-            return Double.parseDouble(totalText.replaceAll("[^0-9.]", ""));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch total price", e);
+            return Integer.parseInt(badge.get(0).getText().replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
-    public void clickCCart() {
-        waitForElement(cartIcon);
-        click(cartIcon);
-    }
-    public void removeProduct(){
-        click(remove);
+
+    @Step("Remove first product from cart")
+    public void removeFirstProduct() {
+        click(REMOVE_BTN);
     }
 
-    public String countOfProducts() {
-        return getText(cartCount);
-    }
-    public boolean isProductDisplayed() {
-        return new ProductsPage().ProductPageIsDisplayed();
+    @Step("Click Continue Shopping")
+    public void clickContinueShopping() {
+        click(CONTINUE_SHOP);
     }
 
+    @Step("Get all cart item names")
     public List<String> getCartItems() {
-        List<WebElement> elements = driver.findElements(
-                By.xpath("//android.widget.TextView[@content-desc='test-Item title']")
-        );
-
-        return elements.stream()
+        return findAll(CART_ITEMS).stream()
                 .map(WebElement::getText)
                 .collect(Collectors.toList());
     }
 
-
+    @Step("Check cart contains product: {productName}")
+    public boolean containsProduct(String productName) {
+        return getCartItems().contains(productName);
+    }
 }

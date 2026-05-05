@@ -1,139 +1,170 @@
 package stepdefinitions;
 
 import io.cucumber.java.en.*;
+import io.qameta.allure.Step;
 import org.testng.Assert;
 import pages.ProductsPage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Filter {
 
-    ProductsPage productsPage = new ProductsPage();
+    private final ProductsPage productsPage = new ProductsPage();
 
-    List<String> originalNames;
-    List<Double> originalPrices;
+    private List<String> capturedNames;
+    private List<Double> capturedPrices;
 
-    // ---------------- VIEW CHANGE ----------------
+    // ─── View toggle ──────────────────────────────────────────────────────────
 
     @Given("user is in card view")
-    public void view() {
-        Assert.assertTrue(productsPage.ProductPageIsDisplayed());
+    public void userIsInCardView() {
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page should be visible");
+    }
+
+    @When("user click on the view button")
+    @Step("Click the view toggle button")
+    public void clickViewButton() {
+        productsPage.clickViewToggle();
     }
 
     @Then("Product visibility is changed")
-    public void productVisibilityIsChanged() {
+    @Step("Verify product list view is active")
+    public void productVisibilityChanged() {
         Assert.assertTrue(productsPage.isListView(),
-                "View was not changed");
+                "View was not toggled to list view");
     }
 
-    // ---------------- FILTER CLICK ----------------
+    // ─── Filter dialog ────────────────────────────────────────────────────────
 
     @When("user click on filter icon")
-    public void userClickOnFilterIcon() {
+    @Step("Open the filter/sort dialog")
+    public void clickFilterIcon() {
         productsPage.clickFilter();
     }
 
     @Then("Sort items by pop-up is displayed")
-    public void sortItemsByPopUpIsDisplayed() {
+    @Step("Verify sort popup is displayed")
+    public void sortPopupIsDisplayed() {
         Assert.assertTrue(productsPage.isSortPopupDisplayed(),
-                "Sort popup not displayed");
+                "Sort popup was not displayed");
     }
 
-    // ---------------- A-Z SORT ----------------
+    // ─── A-Z sort ─────────────────────────────────────────────────────────────
 
     @Given("User able to sort the products based on the naming A-Z")
-    public void userAbleToSortTheProductsBasedOnTheNamingAZ() {
-        originalNames = productsPage.getProductNames();
+    @Step("Capture product names before A-Z sort")
+    public void captureNamesBeforeAzSort() {
+        capturedNames  = productsPage.getProductNames();
+        capturedPrices = null;
     }
 
     @When("user selects the a-z")
-    public void userSelectsTheAZ() {
+    @Step("Select 'Name (A to Z)' sort option")
+    public void selectAzSort() {
         productsPage.selectFilterOption("Name (A to Z)");
     }
 
-    // ---------------- Z-A SORT ----------------
+    // ─── Z-A sort ─────────────────────────────────────────────────────────────
 
     @Given("User able to sort the products based on the naming Z-A")
-    public void userAbleToSortTheProductsBasedOnTheNamingZA() {
-        originalNames = productsPage.getProductNames();
+    @Step("Capture product names before Z-A sort")
+    public void captureNamesBeforeZaSort() {
+        capturedNames  = productsPage.getProductNames();
+        capturedPrices = null;
     }
 
     @When("user selects the z-a")
-    public void userSelectsTheZA() {
+    @Step("Select 'Name (Z to A)' sort option")
+    public void selectZaSort() {
         productsPage.selectFilterOption("Name (Z to A)");
     }
 
-    // ---------------- PRICE LOW → HIGH ----------------
+    // ─── Price low → high ─────────────────────────────────────────────────────
 
     @Given("User able to sort the products based on the price low to high")
-    public void userAbleToSortTheProductsBasedOnThePriceLowToHigh() {
-        originalPrices = productsPage.getProductPrices();
+    @Step("Capture product prices before low-to-high sort")
+    public void capturePricesBeforeLowHigh() {
+        capturedPrices = productsPage.getProductPrices();
+        capturedNames  = null;
     }
 
     @When("user selects the price low to high")
-    public void userSelectsThePriceLowToHigh() {
+    @Step("Select 'Price (low to high)' sort option")
+    public void selectPriceLowHigh() {
         productsPage.selectFilterOption("Price (low to high)");
     }
 
-    // ---------------- PRICE HIGH → LOW ----------------
+    // ─── Price high → low ─────────────────────────────────────────────────────
 
     @Given("User able to sort the products based on the price high to low")
-    public void userAbleToSortTheProductsBasedOnThePriceHighToLow() {
-        originalPrices = productsPage.getProductPrices();
+    @Step("Capture product prices before high-to-low sort")
+    public void capturePricesBeforeHighLow() {
+        capturedPrices = productsPage.getProductPrices();
+        capturedNames  = null;
     }
 
     @When("user selects the price high to low")
-    public void userSelectsThePriceHighToLow() {
+    @Step("Select 'Price (high to low)' sort option")
+    public void selectPriceHighLow() {
         productsPage.selectFilterOption("Price (high to low)");
     }
 
-    // ---------------- VALIDATION ----------------
+    // ─── Shared sort validation ───────────────────────────────────────────────
 
     @Then("list of products are in selected order")
-    public void listOfProductsAreInSelectedOrder() {
-
-        // Try names first
-        if (originalNames != null) {
-            List<String> actual = productsPage.getProductNames();
-            List<String> sorted = new ArrayList<>(actual);
-
-            if (actual.get(0).compareTo(actual.get(actual.size()-1)) < 0) {
-                Collections.sort(sorted); // A-Z
-            } else {
-                sorted.sort(Collections.reverseOrder()); // Z-A
-            }
-
-            Assert.assertEquals(actual, sorted,
-                    "Products are NOT sorted correctly");
-        }
-
-        // Try prices
-        if (originalPrices != null) {
-            List<Double> actual = productsPage.getProductPrices();
-            List<Double> sorted = new ArrayList<>(actual);
-
-            if (actual.get(0) < actual.get(actual.size()-1)) {
-                Collections.sort(sorted); // low-high
-            } else {
-                sorted.sort(Collections.reverseOrder()); // high-low
-            }
-
-            Assert.assertEquals(actual, sorted,
-                    "Prices are NOT sorted correctly");
+    @Step("Verify products are sorted in the selected order")
+    public void verifyProductsAreSorted() {
+        if (capturedNames != null) {
+            verifyNameSort();
+        } else if (capturedPrices != null) {
+            verifyPriceSort();
         }
     }
 
-    // ---------------- CANCEL ----------------
+    private void verifyNameSort() {
+        List<String> actual = productsPage.getProductNames();
+        List<String> expected = new ArrayList<>(actual);
+
+        boolean isAscending = actual.get(0).compareTo(actual.get(actual.size() - 1)) <= 0;
+        if (isAscending) {
+            Collections.sort(expected);
+        } else {
+            expected.sort(Collections.reverseOrder());
+        }
+
+        Assert.assertEquals(actual, expected,
+                "Product names are not in the expected sorted order");
+    }
+
+    private void verifyPriceSort() {
+        List<Double> actual = productsPage.getProductPrices();
+        List<Double> expected = new ArrayList<>(actual);
+
+        boolean isAscending = actual.get(0) <= actual.get(actual.size() - 1);
+        if (isAscending) {
+            Collections.sort(expected);
+        } else {
+            expected.sort(Collections.reverseOrder());
+        }
+
+        Assert.assertEquals(actual, expected,
+                "Product prices are not in the expected sorted order");
+    }
+
+    // ─── Cancel sort ──────────────────────────────────────────────────────────
 
     @Given("User able to cancel the sorting of the products")
-    public void userAbleToCancelTheSortingOfTheProducts() {
-        Assert.assertTrue(productsPage.ProductPageIsDisplayed());
+    public void userCanCancelSorting() {
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page should be visible before testing cancel");
     }
 
     @When("user clicks on cancel")
-    public void userClicksOnCancel() {
+    @Step("Cancel the sort dialog")
+    public void clickCancel() {
         productsPage.clickCancel();
     }
-
-
 }
