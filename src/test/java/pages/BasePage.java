@@ -4,6 +4,7 @@ import constants.FrameworkConstants;
 import core.DriverManager;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -206,7 +207,7 @@ public abstract class BasePage {
     /** Hides the software keyboard if it is open. */
     protected void hideKeyboard() {
         try {
-            driver().hideKeyboard();
+            ((AndroidDriver) driver()).hideKeyboard();
         } catch (Exception e) {
             log.debug("hideKeyboard: keyboard not present or already hidden");
         }
@@ -216,9 +217,9 @@ public abstract class BasePage {
 
     /** Switches driver to a WebView context (first available). */
     protected void switchToWebView() {
-        for (String ctx : driver().getContextHandles()) {
+        for (String ctx : ((AndroidDriver) driver()).getContextHandles()) {
             if (ctx.contains("WEBVIEW")) {
-                driver().context(ctx);
+                ((AndroidDriver) driver()).context(ctx);
                 log.debug("Switched to context: {}", ctx);
                 return;
             }
@@ -228,7 +229,7 @@ public abstract class BasePage {
 
     /** Switches driver back to native app context. */
     protected void switchToNative() {
-        driver().context("NATIVE_APP");
+        ((AndroidDriver) driver()).context("NATIVE_APP");
         log.debug("Switched to NATIVE_APP context");
     }
 
@@ -236,17 +237,17 @@ public abstract class BasePage {
 
     /** Launches the app (puts it in the foreground). */
     protected void launchApp() {
-        driver().activateApp(constants.MobileConstants.APP_PACKAGE);
+        ((AndroidDriver) driver()).activateApp(constants.MobileConstants.APP_PACKAGE);
     }
 
     /** Terminates the app. */
     protected void terminateApp() {
-        driver().terminateApp(constants.MobileConstants.APP_PACKAGE);
+        ((AndroidDriver) driver()).terminateApp(constants.MobileConstants.APP_PACKAGE);
     }
 
     /** Sends the app to the background for the given number of seconds, then restores it. */
     protected void sendAppToBackground(int seconds) {
-        driver().runAppInBackground(java.time.Duration.ofSeconds(seconds));
+        ((AndroidDriver) driver()).runAppInBackground(java.time.Duration.ofSeconds(seconds));
     }
 
     // ─── Device info ────────────────────────────────────────────────────────────

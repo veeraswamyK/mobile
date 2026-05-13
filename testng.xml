@@ -1,26 +1,15 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Mobile Automation Suite" parallel="tests" thread-count="2" verbose="1">
+<suite name="Mobile Automation Suite" parallel="none" thread-count="1" verbose="1">
 
     <listeners>
         <listener class-name="listeners.TestListener"/>
         <listener class-name="listeners.RetryListener"/>
     </listeners>
 
-    <!-- Emulator 1 -->
-    <test name="Emulator-1">
+    <test name="Emulator">
         <parameter name="udid"       value="emulator-5554"/>
         <parameter name="systemPort" value="8201"/>
-        <parameter name="deviceName" value="Android Emulator 1"/>
-        <classes>
-            <class name="runners.TestRunner"/>
-        </classes>
-    </test>
-
-    <!-- Emulator 2 -->
-    <test name="Emulator-2">
-        <parameter name="udid"       value="emulator-5556"/>
-        <parameter name="systemPort" value="8202"/>
-        <parameter name="deviceName" value="Android Emulator 2"/>
+        <parameter name="deviceName" value="Android Emulator"/>
         <classes>
             <class name="runners.TestRunner"/>
         </classes>

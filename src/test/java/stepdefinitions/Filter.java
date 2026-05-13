@@ -126,6 +126,7 @@ public class Filter {
 
     private void verifyNameSort() {
         List<String> actual = productsPage.getProductNames();
+        Assert.assertFalse(actual.isEmpty(), "Product names should be visible before validating sort order");
         List<String> expected = new ArrayList<>(actual);
 
         boolean isAscending = actual.get(0).compareTo(actual.get(actual.size() - 1)) <= 0;
@@ -141,6 +142,7 @@ public class Filter {
 
     private void verifyPriceSort() {
         List<Double> actual = productsPage.getProductPrices();
+        Assert.assertFalse(actual.isEmpty(), "Product prices should be visible before validating sort order");
         List<Double> expected = new ArrayList<>(actual);
 
         boolean isAscending = actual.get(0) <= actual.get(actual.size() - 1);

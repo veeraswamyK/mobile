@@ -11,8 +11,8 @@ public class CheckoutPage extends BasePage {
     private static final By ZIP_CODE     = By.xpath("//android.widget.EditText[@content-desc='test-Zip/Postal Code']");
     private static final By CONTINUE_BTN = By.xpath("//android.widget.TextView[@text='CONTINUE']");
     private static final By FINISH_BTN   = By.xpath("//android.widget.TextView[@text='FINISH']");
-    private static final By CANCEL_BTN   = AppiumBy.accessibilityId("test-CANCEL");
-    private static final By CHECKOUT_HDR = AppiumBy.accessibilityId("test-CHECKOUT: YOUR INFORMATION");
+    private static final By CANCEL_BTN   = AppiumBy.androidUIAutomator("new UiSelector().text(\"CANCEL\")");
+    private static final By CHECKOUT_HDR = AppiumBy.androidUIAutomator("new UiSelector().text(\"CHECKOUT: INFORMATION\")");
 
     @Step("Enter checkout details: {firstName} {lastName} {zipCode}")
     public void enterDetails(String firstName, String lastName, String zipCode) {

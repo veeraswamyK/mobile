@@ -20,6 +20,8 @@ public class Product {
     @When("user adds product to cart")
     @Step("Add first product to cart and store its name")
     public void addProductToCart() {
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page should be visible before adding a product");
         String productName = productsPage.getFirstProductName();
         ContextManager.getContext().set(PRODUCT_NAME_KEY, productName);
         productsPage.addFirstProductToCart();

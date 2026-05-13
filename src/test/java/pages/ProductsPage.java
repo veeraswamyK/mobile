@@ -20,7 +20,7 @@ public class ProductsPage extends BasePage {
     private static final By CART_COUNT       = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
     private static final By VIEW_TOGGLE      = AppiumBy.accessibilityId("test-Toggle");
     private static final By FILTER_BTN       = AppiumBy.accessibilityId("test-Modal Selector Button");
-    private static final By SORT_POPUP_TITLE = By.xpath("//android.widget.TextView[@text='Sort Items']");
+    private static final By SORT_POPUP_TITLE = By.xpath("//android.widget.TextView[@text='Name (A to Z)' or @text='Name (Z to A)' or @text='Price (low to high)' or @text='Price (high to low)']");
     private static final By PRODUCT_NAMES    = By.xpath("//android.widget.TextView[@content-desc='test-Item title']");
     private static final By PRODUCT_PRICES   = By.xpath("//android.widget.TextView[@content-desc='test-Price']");
     private static final By LIST_VIEW_IMGS   = By.xpath("//android.widget.ImageView");
@@ -43,8 +43,8 @@ public class ProductsPage extends BasePage {
 
     @Step("Add second product to cart")
     public void addSecondProductToCart() {
-        waitUntilVisible(SECOND_ADD_CART);
-        click(SECOND_ADD_CART);
+        waitUntilVisible(FIRST_ADD_CART);
+        click(FIRST_ADD_CART);
     }
 
     /**
@@ -115,19 +115,19 @@ public class ProductsPage extends BasePage {
 
     @Step("Get name of the first product")
     public String getFirstProductName() {
-        return findAll(PRODUCT_NAMES).get(0).getText();
+        return findAllVisible(PRODUCT_NAMES).get(0).getText();
     }
 
     @Step("Get all product names")
     public List<String> getProductNames() {
-        return findAll(PRODUCT_NAMES).stream()
+        return findAllVisible(PRODUCT_NAMES).stream()
                 .map(WebElement::getText)
                 .collect(Collectors.toList());
     }
 
     @Step("Get all product prices as doubles")
     public List<Double> getProductPrices() {
-        return findAll(PRODUCT_PRICES).stream()
+        return findAllVisible(PRODUCT_PRICES).stream()
                 .map(e -> parsePrice(e.getText()))
                 .collect(Collectors.toList());
     }

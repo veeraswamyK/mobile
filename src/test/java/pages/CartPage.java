@@ -13,8 +13,8 @@ public class CartPage extends BasePage {
     private static final By CHECKOUT_BTN  = By.xpath("//android.view.ViewGroup[@content-desc='test-CHECKOUT']");
     private static final By CART_ICON     = AppiumBy.accessibilityId("test-Cart");
     private static final By CART_COUNT    = By.xpath("//android.view.ViewGroup[@content-desc='test-Cart']/child::android.view.ViewGroup/descendant::android.widget.TextView");
-    private static final By REMOVE_BTN    = AppiumBy.androidUIAutomator("new UiSelector().text('REMOVE')");
-    private static final By TOTAL_PRICE   = AppiumBy.accessibilityId("test-Price");
+    private static final By REMOVE_BTN    = By.xpath("//android.widget.TextView[@text='REMOVE']");
+    private static final By TOTAL_PRICE   = By.xpath("//android.widget.TextView[contains(@text,'$')]");
     private static final By CART_ITEMS    = By.xpath("//android.widget.TextView[@content-desc='test-Item title']");
     private static final By CONTINUE_SHOP = By.xpath("//android.widget.TextView[@text='CONTINUE SHOPPING']");
 
@@ -31,9 +31,11 @@ public class CartPage extends BasePage {
 
     @Step("Get total price from cart")
     public double getTotalPrice() {
-        waitUntilVisible(TOTAL_PRICE);
-        String text = getText(TOTAL_PRICE).replaceAll("[^0-9.]", "");
-        return Double.parseDouble(text);
+        return findAllVisible(TOTAL_PRICE).stream()
+                .map(e -> e.getText().replaceAll("[^0-9.]", ""))
+                .filter(text -> !text.isBlank())
+                .mapToDouble(Double::parseDouble)
+                .sum();
     }
 
     @Step("Get cart item count (0 if badge absent)")

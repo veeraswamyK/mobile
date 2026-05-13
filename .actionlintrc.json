@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "actions/no-deprecated-set-output": "error",
+    "actions/no-deprecated-commands": "error",
+    "actions/no-hardcoded-github-server-url": "error",
+    "actions/no-run-dangerously": "warning",
+    "actions/required-status-check-name": "warning",
+    "actions/no-unsupported-commands": "error",
+    "checkout-v2": "warning"
+  },
+  "env": {
+    "github-server": "https://github.com"
+  }
+}

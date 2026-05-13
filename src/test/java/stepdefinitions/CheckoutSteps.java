@@ -1,6 +1,8 @@
 package stepdefinitions;
 
+import io.cucumber.java.PendingException;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Then;
 import io.qameta.allure.Step;
 import pages.CheckoutPage;
 
@@ -18,5 +20,11 @@ public class CheckoutSteps {
     @Step("Finish the order")
     public void finishOrder() {
         checkoutPage.finishOrder();
+    }
+
+    @Then("Product purchase is displayed")
+    public void productPurchaseIsDisplayed() {
+
+
     }
 }

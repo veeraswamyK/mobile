@@ -51,6 +51,8 @@ public final class CapabilityFactory {
         options.setAppActivity(MobileConstants.APP_ACTIVITY);
         options.setNoReset(false);
         options.setFullReset(false);
+        options.autoGrantPermissions();
+        options.setAdbExecTimeout(Duration.ofSeconds(300));
     }
 
     private static void configureCloud(UiAutomator2Options options, String deviceName) {

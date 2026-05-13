@@ -15,6 +15,9 @@ public class Login {
     @Given("user logs in with username {string} and password {string}")
     @Step("Login with username='{0}' and password='***'")
     public void login(String username, String password) {
+        if (productsPage.isDisplayed()) {
+            return;
+        }
         loginPage.login(username, password);
     }
 

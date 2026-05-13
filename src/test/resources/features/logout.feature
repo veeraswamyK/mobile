@@ -8,11 +8,11 @@ Feature: Navigation Menu
     Given user is logged in
 
   Scenario: Navigation menu opens successfully
-    When user click on nav-bar$
+    When user click on nav-bar
     Then nav bar options are displayed
 
   Scenario: User can logout via navigation menu
-    When user click on nav-bar$
+    When user click on nav-bar
     And user click on logout
     Then login page is displayed
 

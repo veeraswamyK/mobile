@@ -5,10 +5,13 @@ import core.*;
 import io.cucumber.java.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.ITestResult;
+import org.testng.Reporter;
 import utils.ContextManager;
 import utils.ScreenshotUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestHooks {
@@ -61,8 +64,7 @@ public class TestHooks {
 
     @Before
     public void setUp(Scenario scenario) {
-        int index  = COUNTER.getAndIncrement() % TargetManager.size();
-        ExecutionTarget target = TargetManager.getTarget(index);
+        ExecutionTarget target = resolveTarget();
 
         LOG.info("▶ Scenario : {}", scenario.getName());
         LOG.info("  Device   : {} ({})", target.getDeviceName(), target.getUdid());
@@ -74,6 +76,26 @@ public class TestHooks {
                 target.getDeviceName(),
                 target.getSystemPort()
         );
+    }
+
+    private ExecutionTarget resolveTarget() {
+        ITestResult currentResult = Reporter.getCurrentTestResult();
+        if (currentResult != null && currentResult.getTestContext() != null) {
+            Map<String, String> params = currentResult.getTestContext()
+                    .getCurrentXmlTest()
+                    .getAllParameters();
+
+            String udid = params.get("udid");
+            if (udid != null && !udid.isBlank()) {
+                String deviceName = params.getOrDefault("deviceName", ConfigManager.getDeviceName());
+                int systemPort = Integer.parseInt(params.getOrDefault("systemPort",
+                        String.valueOf(ConfigManager.getSystemPort())));
+                return new ExecutionTarget("local", udid.trim(), deviceName.trim(), systemPort);
+            }
+        }
+
+        int index = COUNTER.getAndIncrement() % TargetManager.size();
+        return TargetManager.getTarget(index);
     }
 
     @After

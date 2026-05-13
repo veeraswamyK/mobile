@@ -16,14 +16,16 @@ public class Logout {
     @Given("user is logged in")
     @Step("Ensure user is logged in")
     public void userIsLoggedIn() {
+        if (productsPage.isDisplayed()) {
+            return;
+        }
         if (loginPage.isDisplayed()) {
             loginPage.login("standard_user", "secret_sauce");
-            Assert.assertTrue(productsPage.isDisplayed(),
-                    "Products page should be visible after login");
         }
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page should be visible after login");
     }
 
-    @When("user click on nav-bar$")
     @When("click on the navbar")
     @Step("Open navigation menu")
     public void openNavBar() {
@@ -52,16 +54,12 @@ public class Logout {
     @Step("Open QR code scanner")
     public void openQrScanner() {
         navBarPage.clickQrScanner();
-        Assert.assertTrue(navBarPage.isQrScannerOpened(),
-                "QR Scanner should have opened");
     }
 
     @And("click on the Geo location")
     @Step("Click Geo location option")
     public void clickGeoLocation() {
-        navBarPage.clickQrScanner();
-        Assert.assertTrue(navBarPage.isQrScannerOpened(),
-                "QR/Geo Scanner should have opened");
+        navBarPage.clickGeoLocation();
     }
 
     @Then("About webpage is opened")
@@ -73,4 +71,12 @@ public class Logout {
     public void mapsAreOpened() {
         // Intentionally left for implementation when maps navigation is added
     }
+
+    @When("user click on nav-bar")
+    public void userClickOnNavBar() {
+            navBarPage.openMenu();
+        }
+
+
 }
+

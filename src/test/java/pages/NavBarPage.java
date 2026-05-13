@@ -11,6 +11,7 @@ public class NavBarPage extends BasePage {
     private static final By RESET_BTN    = AppiumBy.accessibilityId("test-RESET APP STATE");
     private static final By CLOSE_ICON   = AppiumBy.accessibilityId("test-Close");
     private static final By QR_SCANNER   = By.xpath("//android.widget.TextView[@text='QR CODE SCANNER']");
+    private static final By GEO_LOCATION = By.xpath("//android.widget.TextView[@text='GEO LOCATION']");
     private static final By LOGIN_BTN    = By.xpath("//android.widget.TextView[@text='LOGIN']");
     private static final By NAV_OPTIONS  = By.xpath("//android.widget.TextView[@content-desc]");
     private static final By SCAN_TEXT    = By.xpath("//android.widget.TextView[contains(@text,'Scan')]");
@@ -38,6 +39,11 @@ public class NavBarPage extends BasePage {
     @Step("Click QR Code Scanner")
     public void clickQrScanner() {
         click(QR_SCANNER);
+    }
+
+    @Step("Click Geo Location")
+    public void clickGeoLocation() {
+        click(GEO_LOCATION);
     }
 
     @Step("Check navigation menu options are displayed")

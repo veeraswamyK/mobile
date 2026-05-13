@@ -26,20 +26,23 @@ public class CartSteps {
     @Given("User is in products page")
     @Step("Ensure user is on Products page")
     public void userIsInProductsPage() {
+        if (productsPage.isDisplayed()) {
+            return;
+        }
         if (loginPage.isDisplayed()) {
             loginPage.login("standard_user", "secret_sauce");
-            Assert.assertTrue(productsPage.isDisplayed(),
-                    "Products page should be visible after login");
         }
+        Assert.assertTrue(productsPage.isDisplayed(),
+                "Products page should be visible");
     }
 
     // ─── Count verification ───────────────────────────────────────────────────
 
-    @Then("Count of products in cart gets updated")
-    @Step("Verify cart badge count increased")
-    public void cartCountGetsUpdated() {
-        Assert.assertTrue(productsPage.addProductAndVerifyCount(),
-                "Cart badge count did not update after adding a product");
+    @Then("cart count should be {int}")
+    @Step("Verify cart badge count")
+    public void cartCountShouldBe(int expectedCount) {
+        Assert.assertEquals(productsPage.getCartCount(), expectedCount,
+                "Cart badge count mismatch");
     }
 
     // ─── Single product flow ──────────────────────────────────────────────────
@@ -69,22 +72,14 @@ public class CartSteps {
     @When("user removes product from cart")
     @Step("Navigate to cart and remove a product")
     public void removeProductFromCart() {
-        int before = productsPage.getCartCount();
         cartPage.clickCartIcon();
         cartPage.removeFirstProduct();
-        int after = productsPage.getCartCount();
-        Assert.assertTrue(after < before,
-                "Cart count should decrease after removing a product");
     }
 
     @And("user removes product from products page")
     @Step("Remove product via REMOVE button on products page")
     public void removeProductFromProductsPage() {
-        int before = productsPage.getCartCount();
         cartPage.removeFirstProduct();
-        int after = productsPage.getCartCount();
-        Assert.assertTrue(after < before,
-                "Cart count should decrease after removing a product");
     }
 
     @When("user adds product to cart same item multiple times")

@@ -22,7 +22,7 @@ public class LoginPage extends BasePage {
 
     @Step("Check login page is displayed")
     public boolean isDisplayed() {
-        return isVisible(LOGIN_BTN);
+        return isVisibleShort(USERNAME);
     }
 
     @Step("Get login error message text")
