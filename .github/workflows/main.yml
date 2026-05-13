@@ -22,7 +22,7 @@ on:
       tags:
         description: "Cucumber tag filter (e.g. @smoke, @critical, @regression)"
         required: false
-        default: "@smoke and @login and @cart and @prod and @nav
+        default: "@smoke and @login and @cart and @prod and @nav"
       uploadArtifacts:
         description: "Upload detailed artifacts (screenshots, logs)"
         required: false
