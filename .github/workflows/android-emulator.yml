@@ -54,7 +54,7 @@ jobs:
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n emulator-5554 \
             -k "system-images;android-33;google_apis;x86_64" \
             -c 2048M \
-            -force
+            --force
 
       - name: Start Emulator
         run: |
