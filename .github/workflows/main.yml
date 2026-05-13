@@ -58,7 +58,7 @@ jobs:
           elif [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo "tags=@regression" >> $GITHUB_OUTPUT
           else
-            echo "tags=@smoke" >> $GITHUB_OUTPUT
+            echo "tags=@smoke or @login or @cart or @prod or @nav" >> $GITHUB_OUTPUT
           fi
 
   # Main test job
