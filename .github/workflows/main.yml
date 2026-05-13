@@ -1,4 +1,6 @@
 name: Mobile Automation CI/CD Pipeline
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true
 on:
   push:
     branches: [master, develop]
