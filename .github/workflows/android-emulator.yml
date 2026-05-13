@@ -59,7 +59,7 @@ jobs:
 
       - name: Start Emulator
         run: |
-          nohup $ANDROID_HOME/emulator/emulator 
+          nohup $ANDROID_HOME/emulator/emulator \
             -avd android-emulator \
             -no-snapshot-load \
             -no-snapshot-save \
