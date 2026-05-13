@@ -89,7 +89,7 @@ public final class ConfigManager {
     // ---- BrowserStack (read from env vars in CI; file only for local dev) ----
 
     public static String getBsUser() {
-        String user = get("bsUser", "");
+        String user = get("bsUser", "veeraswamykallur_15CJ49");
         if (user.isEmpty()) {
             throw new RuntimeException("BrowserStack username (bsUser) is not configured.");
         }
@@ -97,7 +97,7 @@ public final class ConfigManager {
     }
 
     public static String getBsKey() {
-        String key = get("bsKey", "");
+        String key = get("bsKey", "L9b2SCbUFhsJRagkEqsX");
         if (key.isEmpty()) {
             throw new RuntimeException("BrowserStack access key (bsKey) is not configured.");
         }
@@ -105,7 +105,7 @@ public final class ConfigManager {
     }
 
     public static String getBsAppId() {
-        String appId = get("bsAppId", "");
+        String appId = get("bsAppId", "bs://750022a7fe4ec5ee176abeb8c314dfd08df12876");
         if (appId.isEmpty()) {
             throw new RuntimeException("BrowserStack app ID (bsAppId) is not configured.");
         }
