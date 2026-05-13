@@ -37,8 +37,7 @@ jobs:
 
       - name: Install Appium
         run: |
-          npm install -g appium@latest
-          appium -v
+          npm install -g appium@next --ignore-scripts
           appium driver install uiautomator2
           appium driver list
 
