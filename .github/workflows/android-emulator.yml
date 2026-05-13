@@ -51,14 +51,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libpulse0 libxext6 libxrender1 libxkbcommon0 libfontconfig1
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-33;google_apis;x86_64"
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n emulator-5554 \
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd \-n android-emulator \
             -k "system-images;android-33;google_apis;x86_64" \
             -c 2048M \
             --force
+            $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list avd
 
       - name: Start Emulator
         run: |
-          nohup $ANDROID_HOME/emulator/emulator -avd emulator-5554 \
+          nohup $ANDROID_HOME/emulator/emulator 
+            -avd android-emulator \
             -no-snapshot-load \
             -no-snapshot-save \
             -no-audio \
