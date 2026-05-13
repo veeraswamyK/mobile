@@ -2,13 +2,13 @@ name: Android Emulator Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
     paths:
       - 'src/test/**'
       - 'pom.xml'
       - '.github/workflows/android-emulator.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
   schedule:
     # Run daily at 3 AM UTC
     - cron: '0 3 * * *'
