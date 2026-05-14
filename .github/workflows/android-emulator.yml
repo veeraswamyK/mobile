@@ -185,37 +185,31 @@ jobs:
       - name: Collect Results
         if: always()
         run: |
-              mkdir -p test-artifacts/{allure-html,reports,screenshots,logs}
-          
-              # Generated Allure HTML report (contains index.html)
-              [ -d "allure-report" ] && cp -r allure-report/. test-artifacts/allure-html/ || true
-          
-              # TestNG / Cucumber reports
-              [ -d "test-output" ] && cp -r test-output/. test-artifacts/reports/ || true
-          
-              # Screenshots
-              [ -d "test-output/screenshots" ] && cp -r test-output/screenshots/. test-artifacts/screenshots/ || true
-          
-              # Appium logs
-              [ -d "appium-logs" ] && cp -r appium-logs/. test-artifacts/logs/ || true
+          mkdir -p test-artifacts/{allure,reports,screenshots,logs}
+          # Allure results
+          [ -d "allure-report" ] && cp -r allure-report/* test-artifacts/allure/ || true
+          # TestNG reports
+          [ -d "test-output" ] && cp -r test-output/* test-artifacts/reports/ || true
+          # Screenshots
+          [ -d "test-output/screenshots" ] && cp -r test-output/screenshots/* test-artifacts/screenshots/ || true
+          # Appium logs
+          [ -d "appium-logs" ] && cp -r appium-logs/* test-artifacts/logs/ || true
 
-      - name: Upload Allure Results
+      - name: Generate Allure HTML Report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: simple-elf/allure-report-action@master
         with:
-          name: allure-results-android
-          path: test-artifacts/allure/
-          retention-days: 30
-          if-no-files-found: warn
+          allure_results: test-artifacts/allure
+          allure_report: allure-report
+          allure_history: allure-history
       - name: Upload Allure HTML Report
         if: always()
         uses: actions/upload-artifact@v5
         with:
-            name: allure-html-report
-            path: test-artifacts/allure-html/
-            retention-days: 30
-            if-no-files-found: warn
-
+          name: allure-html-report
+          path: allure-report
+          retention-days: 30
+     
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v5
