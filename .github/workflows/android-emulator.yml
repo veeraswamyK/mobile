@@ -94,26 +94,36 @@ jobs:
 
           # Wait for ADB to see the emulator
           echo "Waiting for emulator device to appear..."
-          for i in {1..60}; do
+          for i in {1..90}; do
             if $ANDROID_HOME/platform-tools/adb devices | grep -q "emulator-"; then
               echo "Emulator detected by ADB"
               break
             fi
-            echo "Still waiting for emulator to appear... ($i/60)"
+            echo "Still waiting for emulator to appear... ($i/90)"
             sleep 2
           done
 
           # Wait for Android to finish booting
           echo "Waiting for Android boot completion..."
-          for i in {1..120}; do
+          for i in {1..180}; do
             BOOT_COMPLETED=$($ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
             if [ "$BOOT_COMPLETED" = "1" ]; then
               echo "Emulator booted successfully after $((i*2)) seconds"
               break
             fi
-            echo "Booting... ($i/120)"
+            echo "Booting... ($i/180)"
             sleep 2
           done
+          echo "Unlocking device..."
+            $ANDROID_HOME/platform-tools/adb shell input keyevent 82 || true
+
+          echo "Final adb devices:"
+            $ANDROID_HOME/platform-tools/adb devices
+
+          echo "Waiting 15 extra seconds for stability..."
+            sleep 15
+
+            tail -50 emulator.log || true
 
           # Unlock the screen
           $ANDROID_HOME/platform-tools/adb shell input keyevent 82 || true
@@ -144,6 +154,10 @@ jobs:
 
           # Verify Appium is running
           curl -s http://localhost:4723/status | jq .
+      - name: Verify Emulator Before Tests
+        run: |
+            adb devices
+            adb shell getprop sys.boot_completed
 
       - name: Build Project
         run: |
