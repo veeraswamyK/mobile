@@ -149,18 +149,17 @@ jobs:
         run: |
               mvn clean test-compile -DskipTests \
               -Dmaven.artifact.threads=10
-
       - name: Run All Tagged Tests
         id: run-all-tests
         continue-on-error: true
         run: |
-          mvn test \
-            -Dtest=runners.TestRunner \
-            "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
-            -DexecutionType=local-android \
-            -Dappium.host=127.0.0.1 \
-            -Dappium.port=4723 \
-            -v
+          mvn clean test \
+          "-Dtest=runners.TestRunner" \
+          "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
+          "-DexecutionType=local-android" \
+          "-Dappium.host=127.0.0.1" \
+          "-Dappium.port=4723"
+     
 
       - name: Collect Results
         if: always()
