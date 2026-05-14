@@ -149,31 +149,17 @@ jobs:
             -X \
             -Dmaven.artifact.threads=10
 
-      - name: Run Smoke Tests
-        id: test-smoke
+      - name: Run All Tagged Tests
+        id: run-all-tests
         continue-on-error: true
-        run: |
+       run: |
           mvn test \
             -Dtest=runners.TestRunner \
-            -Dcucumber.filter.tags="@smoke" \
+            "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
             -DexecutionType=local-android \
             -Dappium.host=127.0.0.1 \
             -Dappium.port=4723 \
             -v
-
-      - name: Run Regression Tests
-        id: test-regression
-        continue-on-error: true
-        if: success()
-        run: |
-          mvn test \
-            -Dtest=runners.TestRunner \
-            -Dcucumber.filter.tags="@regression" \
-            -DexecutionType=local-android \
-            -Dappium.host=127.0.0.1 \
-            -Dappium.port=4723 \
-            -v
-
       - name: Collect Results
         if: always()
         run: |
