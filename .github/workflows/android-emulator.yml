@@ -147,9 +147,8 @@ jobs:
 
       - name: Build Project
         run: |
-          mvn clean compile -DskipTests \
-            -X \
-            -Dmaven.artifact.threads=10
+              mvn clean test-compile -DskipTests \
+              -Dmaven.artifact.threads=10
 
       - name: Run All Tagged Tests
         id: run-all-tests
