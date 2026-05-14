@@ -21,7 +21,7 @@ jobs:
     environment: production
     timeout-minutes: 45
 
-  steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -48,38 +48,39 @@ jobs:
 
       - name: Create Android Emulator
         run: |
-            sudo apt-get update
-            sudo apt-get install -y libpulse0 libxext6 libxrender1 libxkbcommon0 libfontconfig1
+          sudo apt-get update
+          sudo apt-get install -y libpulse0 libxext6 libxrender1 libxkbcommon0 libfontconfig1
 
-            export ANDROID_AVD_HOME="$HOME/.android/avd"
-            mkdir -p "$ANDROID_AVD_HOME"
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
 
-            echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             "system-images;android-33;google_apis;x86_64"
 
-            # Remove any previous AVD if it exists
-            $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager delete avd \
+          # Remove any previous AVD if it exists
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager delete avd \
             -n android-emulator || true
 
-            # Create a fresh AVD
-            echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd \
+          # Create a fresh AVD
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd \
             -n android-emulator \
             -k "system-images;android-33;google_apis;x86_64" \
             -d pixel \
             -f
 
-            echo "=== Available AVDs ==="
-            $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list avd
+          echo "=== Available AVDs ==="
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager list avd
 
-            echo "=== Files in AVD directory ==="
-            ls -la "$ANDROID_AVD_HOME"
+          echo "=== Files in AVD directory ==="
+          ls -la "$ANDROID_AVD_HOME"
+
       - name: Start Android Emulator
         run: |
           export ANDROID_AVD_HOME="$HOME/.android/avd"
-      
+
           echo "Available AVDs:"
           $ANDROID_HOME/emulator/emulator -list-avds
-      
+
           # Start emulator in background
           nohup $ANDROID_HOME/emulator/emulator \
             -avd android-emulator \
@@ -90,7 +91,7 @@ jobs:
             -no-snapshot-save \
             -gpu swiftshader_indirect \
             -accel on > emulator.log 2>&1 &
-      
+
           # Wait for ADB to see the emulator
           echo "Waiting for emulator device to appear..."
           for i in {1..60}; do
@@ -101,7 +102,7 @@ jobs:
             echo "Still waiting for emulator to appear... ($i/60)"
             sleep 2
           done
-      
+
           # Wait for Android to finish booting
           echo "Waiting for Android boot completion..."
           for i in {1..120}; do
@@ -113,15 +114,16 @@ jobs:
             echo "Booting... ($i/120)"
             sleep 2
           done
-      
+
           # Unlock the screen
           $ANDROID_HOME/platform-tools/adb shell input keyevent 82 || true
-      
+
           # Final verification
           $ANDROID_HOME/platform-tools/adb devices
-      
+
           echo "=== Emulator Log (last 50 lines) ==="
           tail -50 emulator.log || true
+
       - name: Start Appium Server
         run: |
           mkdir -p appium-logs
@@ -129,7 +131,7 @@ jobs:
             --log-timestamp \
             --log-file appium-logs/server.log \
             --allow-insecure chromedriver_autodownload &
-          
+
           echo "Waiting for Appium to start..."
           for i in {1..30}; do
             if curl -s http://localhost:4723/status > /dev/null 2>&1; then
@@ -139,7 +141,7 @@ jobs:
             echo "Waiting for Appium ($i/30)..."
             sleep 1
           done
-          
+
           # Verify Appium is running
           curl -s http://localhost:4723/status | jq .
 
@@ -152,7 +154,7 @@ jobs:
       - name: Run All Tagged Tests
         id: run-all-tests
         continue-on-error: true
-       run: |
+        run: |
           mvn test \
             -Dtest=runners.TestRunner \
             "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
@@ -160,20 +162,21 @@ jobs:
             -Dappium.host=127.0.0.1 \
             -Dappium.port=4723 \
             -v
+
       - name: Collect Results
         if: always()
         run: |
           mkdir -p test-artifacts/{allure,reports,screenshots,logs}
-          
+
           # Allure results
           [ -d "target/allure-results" ] && cp -r target/allure-results/* test-artifacts/allure/ || true
-          
+
           # TestNG reports
           [ -d "test-output" ] && cp -r test-output/* test-artifacts/reports/ || true
-          
+
           # Screenshots
           [ -d "test-output/screenshots" ] && cp -r test-output/screenshots/* test-artifacts/screenshots/ || true
-          
+
           # Appium logs
           [ -d "appium-logs" ] && cp -r appium-logs/* test-artifacts/logs/ || true
 
@@ -225,7 +228,6 @@ jobs:
         if: always()
         run: |
           echo "## Android Emulator Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Smoke Tests:** ${{ steps.test-smoke.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Regression Tests:** ${{ steps.test-regression.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **All Tagged Tests:** ${{ steps.run-all-tests.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[View Allure Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
