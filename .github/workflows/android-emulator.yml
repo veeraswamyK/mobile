@@ -156,7 +156,7 @@ jobs:
           mvn clean test \
           "-Dtest=runners.TestRunner" \
           "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
-          "-DexecutionType=local-real" \
+          "-DexecutionType=local-emulator" \
           "-Dappium.host=127.0.0.1" \
           "-Dappium.port=4723"
      
