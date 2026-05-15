@@ -1,5 +1,11 @@
 name: iOS Simulator Tests
 
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [master, develop]
@@ -10,91 +16,115 @@ on:
   pull_request:
     branches: [master, develop]
   schedule:
-    # Run daily at 4 AM UTC
-    - cron: '30 12 * * *'
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
 jobs:
   ios-tests:
     runs-on: macos-latest
     environment: production
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
+      # =====================================================
+      # CHECKOUT
+      # =====================================================
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Set up Java 11
-        uses: actions/setup-java@v4
+      # =====================================================
+      # JAVA
+      # =====================================================
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 11
+          java-version: 17
           cache: maven
 
+      # =====================================================
+      # NODE
+      # =====================================================
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 18
+          node-version: 24
 
-      - name: Install Appium
+      # =====================================================
+      # APPIUM + XCUITEST
+      # =====================================================
+      - name: Install Appium and XCUITest Driver
         run: |
-          npm install -g appium@next --ignore-scripts
+          npm uninstall -g appium || true
+          npm install -g appium@latest --ignore-scripts
+
+          appium driver uninstall xcuitest || true
           appium driver install xcuitest
-          appium driver list installed
 
-      - name: Install iOS dependencies
+          appium --version
+          appium driver list
+
+      # =====================================================
+      # XCODE INFORMATION
+      # =====================================================
+      - name: Show Xcode and Available Simulators
         run: |
-          brew install libimobiledevice
-          brew install ideviceinstaller
-          sudo gem install xcpretty
+          xcodebuild -version
+          xcrun simctl list devices available
 
-      - name: Create iOS Simulator
+      # =====================================================
+      # CREATE AND BOOT iOS SIMULATOR
+      # =====================================================
+      - name: Create and Boot iPhone Simulator
         run: |
-          xcrun simctl list devices available | grep "iPhone" || true
-          
-          # Create simulator if needed
-          SIMULATOR_ID=$(xcrun simctl list devices available \
-            | grep "iPhone 15" \
-            | head -1 \
-            | sed -E 's/.*\(([0-9A-F-]+)\).*/\1/') || true
-          
-          if [ -z "$SIMULATOR_ID" ]; then
-            echo "Creating new simulator..."
-            xcrun simctl create "iPhone-Test" \
-              com.apple.CoreSimulator.SimDeviceType.iPhone-15 \
-              com.apple.CoreSimulator.SimRuntime.iOS-17-2
-          fi
+          # Use the first available iOS runtime
+          RUNTIME=$(xcrun simctl list runtimes \
+            | grep "iOS" \
+            | grep -v "unavailable" \
+            | head -n 1 \
+            | awk -F '[()]' '{print $2}')
 
-      - name: Start iOS Simulator
-        run: |
-          SIMULATOR_ID=$(xcrun simctl list devices available \
-            | grep -m1 "iPhone 15\|iPhone-Test" \
-            | sed -E 's/.*\(([0-9A-F-]+)\).*/\1/')
-          
-          echo "Starting simulator: $SIMULATOR_ID"
-          xcrun simctl boot "$SIMULATOR_ID" || true
-          
-          # Wait for simulator to be ready
-          echo "Waiting for simulator to boot..."
-          for i in {1..30}; do
-            if xcrun simctl getenv "$SIMULATOR_ID" PATH > /dev/null 2>&1; then
-              echo "Simulator ready"
-              break
-            fi
-            echo "Waiting ($i/30)..."
-            sleep 2
-          done
+          echo "Selected runtime: $RUNTIME"
 
+          # Remove old simulator if it exists
+          xcrun simctl delete "CI-iPhone" || true
+
+          # Create new simulator
+          UDID=$(xcrun simctl create "CI-iPhone" "iPhone 16" "$RUNTIME")
+          echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+
+          # Boot simulator
+          xcrun simctl boot "$UDID"
+
+          # Wait until boot completes
+          xcrun simctl bootstatus "$UDID" -b
+
+          # Open Simulator app (optional but helps stability)
+          open -a Simulator
+
+          # Unlock simulator
+          xcrun simctl ui "$UDID" appearance light || true
+
+          echo "Booted simulator UDID: $UDID"
+
+      # =====================================================
+      # START APPIUM SERVER
+      # =====================================================
       - name: Start Appium Server
         run: |
           mkdir -p appium-logs
-          nohup appium --log-level debug \
+
+          nohup appium \
+            --log-level debug \
             --log-timestamp \
-            --log-file appium-logs/server.log \
-            --allow-insecure chromedriver_autodownload &
-          
+            > appium-logs/server.log 2>&1 &
+
+          echo $! > appium.pid
+
           echo "Waiting for Appium to start..."
           for i in {1..30}; do
-            if curl -s http://localhost:4723/status > /dev/null 2>&1; then
+            if curl -sf http://127.0.0.1:4723/status > /dev/null; then
               echo "Appium started successfully"
               break
             fi
@@ -102,102 +132,129 @@ jobs:
             sleep 1
           done
 
+          echo "=== Appium Status ==="
+          curl -s http://127.0.0.1:4723/status | python3 -m json.tool || true
+
+      # =====================================================
+      # VERIFY SIMULATOR
+      # =====================================================
+      - name: Verify Simulator
+        run: |
+          xcrun simctl list devices | grep Booted
+          echo "Simulator UDID: $SIMULATOR_UDID"
+
+      # =====================================================
+      # BUILD PROJECT
+      # =====================================================
       - name: Build Project
         run: |
-          mvn clean compile -DskipTests \
-            -X \
+          mvn clean test-compile -DskipTests \
             -Dmaven.artifact.threads=10
 
-      - name: Run Smoke Tests
-        id: test-smoke
+      # =====================================================
+      # RUN TESTS
+      # =====================================================
+      - name: Run All Tagged Tests
+        id: run-all-tests
         continue-on-error: true
         run: |
-          mvn test \
-            -Dtest=runners.TestRunner \
-            -Dcucumber.filter.tags="@smoke" \
-            -DexecutionType=local-ios \
-            -Dappium.host=127.0.0.1 \
-            -Dappium.port=4723 \
-            -v
+          mvn clean test \
+            "-Dtest=runners.TestRunner" \
+            "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
+            "-DexecutionType=local-emulator" \
+            "-Dappium.host=127.0.0.1" \
+            "-Dappium.port=4723" \
+            "-Dplatform=iOS" \
+            "-DdeviceName=iPhone 16" \
+            "-Dudid=$SIMULATOR_UDID"
 
-      - name: Run Regression Tests
-        id: test-regression
-        continue-on-error: true
-        if: success()
-        run: |
-          mvn test \
-            -Dtest=runners.TestRunner \
-            -Dcucumber.filter.tags="@regression" \
-            -DexecutionType=local-ios \
-            -Dappium.host=127.0.0.1 \
-            -Dappium.port=4723 \
-            -v
-
-      - name: Collect Results
+      # =====================================================
+      # GENERATE ALLURE HTML REPORT
+      # =====================================================
+      - name: Generate Allure HTML Report
         if: always()
-        run: |
-          mkdir -p test-artifacts/{allure,reports,screenshots,logs}
-          
-          # Allure results
-          [ -d "target/allure-results" ] && cp -r target/allure-results/* test-artifacts/allure/ || true
-          
-          # TestNG reports
-          [ -d "test-output" ] && cp -r test-output/* test-artifacts/reports/ || true
-          
-          # Screenshots
-          [ -d "test-output/screenshots" ] && cp -r test-output/screenshots/* test-artifacts/screenshots/ || true
-          
-          # Appium logs
-          [ -d "appium-logs" ] && cp -r appium-logs/* test-artifacts/logs/ || true
-
-      - name: Upload Allure Results
-        if: always()
-        uses: actions/upload-artifact@v4
+        uses: simple-elf/allure-report-action@master
         with:
-          name: allure-results-ios
-          path: test-artifacts/allure/
+          allure_results: target/allure-results
+          allure_report: allure-report
+          allure_history: allure-history
+
+      # =====================================================
+      # UPLOAD ALLURE HTML REPORT
+      # =====================================================
+      - name: Upload Allure HTML Report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: allure-html-report-ios
+          path: allure-report
           retention-days: 30
           if-no-files-found: warn
 
+      # =====================================================
+      # UPLOAD TEST REPORTS
+      # =====================================================
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-reports-ios
-          path: test-artifacts/reports/
+          path: test-output
           retention-days: 30
           if-no-files-found: warn
 
+      # =====================================================
+      # UPLOAD SCREENSHOTS
+      # =====================================================
       - name: Upload Screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: screenshots-ios
-          path: test-artifacts/screenshots/
+          path: test-output/screenshots
           retention-days: 14
           if-no-files-found: warn
 
+      # =====================================================
+      # UPLOAD APPIUM LOGS
+      # =====================================================
       - name: Upload Appium Logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: appium-logs-ios
-          path: test-artifacts/logs/
+          path: appium-logs
           retention-days: 7
           if-no-files-found: warn
 
+      # =====================================================
+      # CLEANUP
+      # =====================================================
       - name: Stop Services
         if: always()
         continue-on-error: true
         run: |
+          # Stop Appium
+          if [ -f appium.pid ]; then
+            kill "$(cat appium.pid)" || true
+          fi
           pkill -f appium || true
-          xcrun simctl shutdown all || true
 
+          # Shutdown simulator
+          if [ -n "$SIMULATOR_UDID" ]; then
+            xcrun simctl shutdown "$SIMULATOR_UDID" || true
+            xcrun simctl delete "$SIMULATOR_UDID" || true
+          fi
+
+      # =====================================================
+      # SUMMARY
+      # =====================================================
       - name: Report Summary
         if: always()
         run: |
           echo "## iOS Simulator Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Smoke Tests:** ${{ steps.test-smoke.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Regression Tests:** ${{ steps.test-regression.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Type:** local-ios" >> $GITHUB_STEP_SUMMARY
+          echo "- **Simulator:** iPhone 16" >> $GITHUB_STEP_SUMMARY
+          echo "- **Result:** ${{ steps.run-all-tests.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[View Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
