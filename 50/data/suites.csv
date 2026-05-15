@@ -1,0 +1,80 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1581","Sort products A to Z","","Fri May 15 07:41:38 UTC 2026","broken","Fri May 15 07:41:40 UTC 2026","","Product Filtering and Sorting","Sort products A to Z",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1569","Cart total matches sum of individual product prices","","Fri May 15 07:41:30 UTC 2026","broken","Fri May 15 07:41:32 UTC 2026","","Shopping Cart","Cart total matches sum of individual product prices",""
+"  As a logged-in user
+  I want to access the navigation menu
+  So that I can log out or use other menu features","1697","Navigation menu opens successfully","","Fri May 15 07:41:56 UTC 2026","broken","Fri May 15 07:41:57 UTC 2026","","Navigation Menu","Navigation menu opens successfully",""
+"  As a logged-in user
+  I want to access the navigation menu
+  So that I can log out or use other menu features","1563","QR code scanner opens from navigation menu","","Fri May 15 07:41:59 UTC 2026","broken","Fri May 15 07:42:00 UTC 2026","","Navigation Menu","QR code scanner opens from navigation menu",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1563","Login with multiple user types","","Fri May 15 07:41:52 UTC 2026","broken","Fri May 15 07:41:54 UTC 2026","","User Authentication","Login with multiple user types",""
+"  As a logged-in user
+  I want to access the navigation menu
+  So that I can log out or use other menu features","1582","Geo location opens from navigation menu","","Fri May 15 07:42:00 UTC 2026","broken","Fri May 15 07:42:02 UTC 2026","","Navigation Menu","Geo location opens from navigation menu",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1587","Invalid login with wrong password shows error","","Fri May 15 07:41:54 UTC 2026","broken","Fri May 15 07:41:56 UTC 2026","","User Authentication","Invalid login with wrong password shows error",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1582","Remove a product from the products page","","Fri May 15 07:41:27 UTC 2026","broken","Fri May 15 07:41:29 UTC 2026","","Shopping Cart","Remove a product from the products page",""
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1579","Sort products by price high to low","","Fri May 15 07:41:43 UTC 2026","broken","Fri May 15 07:41:45 UTC 2026","","Product Filtering and Sorting","Sort products by price high to low",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1571","Login with multiple user types","","Fri May 15 07:41:49 UTC 2026","broken","Fri May 15 07:41:51 UTC 2026","","User Authentication","Login with multiple user types",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1565","Reset app state clears the cart","","Fri May 15 07:41:29 UTC 2026","broken","Fri May 15 07:41:30 UTC 2026","","Shopping Cart","Reset app state clears the cart",""
+"  As a logged-in user
+  I want to access the navigation menu
+  So that I can log out or use other menu features","1568","User can logout via navigation menu","","Fri May 15 07:41:57 UTC 2026","broken","Fri May 15 07:41:59 UTC 2026","","Navigation Menu","User can logout via navigation menu",""
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1558","Toggle product list view","","Fri May 15 07:41:37 UTC 2026","broken","Fri May 15 07:41:38 UTC 2026","","Product Filtering and Sorting","Toggle product list view",""
+"","1577","Verify User is able to open the qr scanner","","Fri May 15 07:42:02 UTC 2026","broken","Fri May 15 07:42:04 UTC 2026","","Navbar functionality","Verify User is able to open the qr scanner",""
+"  As a logged-in user
+  I want to complete a full purchase
+  So that I can verify the entire checkout journey works correctly","1553","Complete purchase flow from login to order confirmation","","Fri May 15 07:41:35 UTC 2026","broken","Fri May 15 07:41:37 UTC 2026","","End-to-End Purchase Flow","Complete purchase flow from login to order confirmation",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1854","Add single product and verify cart badge updates","","Fri May 15 07:41:25 UTC 2026","broken","Fri May 15 07:41:26 UTC 2026","","Shopping Cart","Add single product and verify cart badge updates",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1558","Login with multiple user types","","Fri May 15 07:41:48 UTC 2026","broken","Fri May 15 07:41:49 UTC 2026","","User Authentication","Login with multiple user types",""
+"","1544","Valid logout","","Fri May 15 07:42:07 UTC 2026","broken","Fri May 15 07:42:08 UTC 2026","","Navbar functionality","Valid logout",""
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1587","Sort products by price low to high","","Fri May 15 07:41:41 UTC 2026","broken","Fri May 15 07:41:43 UTC 2026","","Product Filtering and Sorting","Sort products by price low to high",""
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1609","Sort products Z to A","","Fri May 15 07:41:40 UTC 2026","broken","Fri May 15 07:41:41 UTC 2026","","Product Filtering and Sorting","Sort products Z to A",""
+"  As a logged-in user
+  I want to filter and sort the product list
+  So that I can find products more easily","1582","Cancel sort dialog returns to products page","","Fri May 15 07:41:45 UTC 2026","broken","Fri May 15 07:41:46 UTC 2026","","Product Filtering and Sorting","Cancel sort dialog returns to products page",""
+"","1571","Verify User is able to navigating to about webpage","","Fri May 15 07:42:05 UTC 2026","broken","Fri May 15 07:42:07 UTC 2026","","Navbar functionality","Verify User is able to navigating to about webpage",""
+"","1576","Verify User is able to handle maps","","Fri May 15 07:42:04 UTC 2026","broken","Fri May 15 07:42:05 UTC 2026","","Navbar functionality","Verify User is able to handle maps",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1589","Checkout button navigates to address page","","Fri May 15 07:41:34 UTC 2026","broken","Fri May 15 07:41:35 UTC 2026","","Shopping Cart","Checkout button navigates to address page",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1585","Login with multiple user types","","Fri May 15 07:41:51 UTC 2026","broken","Fri May 15 07:41:52 UTC 2026","","User Authentication","Login with multiple user types",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","363","Remove a product from within the cart","","Fri May 15 07:41:27 UTC 2026","broken","Fri May 15 07:41:27 UTC 2026","","Shopping Cart","Remove a product from within the cart",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","326","Add multiple different products to cart","","Fri May 15 07:41:27 UTC 2026","broken","Fri May 15 07:41:27 UTC 2026","","Shopping Cart","Add multiple different products to cart",""
+"  As a mobile app user
+  I want to log in with valid or invalid credentials
+  So that I can access or be denied access appropriately","1555","Valid login with standard user","","Fri May 15 07:41:46 UTC 2026","broken","Fri May 15 07:41:48 UTC 2026","","User Authentication","Valid login with standard user",""
+"  As a logged-in user
+  I want to manage products in my cart
+  So that I can review and proceed to checkout","1562","Continue shopping returns to products page","","Fri May 15 07:41:32 UTC 2026","broken","Fri May 15 07:41:34 UTC 2026","","Shopping Cart","Continue shopping returns to products page",""
