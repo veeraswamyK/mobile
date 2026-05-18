@@ -16,7 +16,6 @@ on:
   pull_request:
     branches: [master, develop]
   schedule:
-    # Run daily at 3 AM UTC
     - cron: '0 3 * * *'
   workflow_dispatch:
 
@@ -27,15 +26,9 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      # =====================================================
-      # CHECKOUT
-      # =====================================================
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # =====================================================
-      # JAVA
-      # =====================================================
       - name: Set up Java 17
         uses: actions/setup-java@v5
         with:
@@ -43,17 +36,11 @@ jobs:
           java-version: 17
           cache: maven
 
-      # =====================================================
-      # NODE
-      # =====================================================
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      # =====================================================
-      # APPIUM + XCUITEST
-      # =====================================================
       - name: Install Appium and XCUITest Driver
         run: |
           npm uninstall -g appium || true
@@ -65,196 +52,212 @@ jobs:
           appium --version
           appium driver list
 
-      # =====================================================
-      # XCODE INFORMATION
-      # =====================================================
       - name: Show Xcode and Available Simulators
         run: |
           xcodebuild -version
           xcrun simctl list devices available
 
-      # =====================================================
-      # CREATE AND BOOT iOS SIMULATOR
-      # =====================================================
       - name: Create and Boot iPhone Simulator
         run: |
-          # Use the first available iOS runtime
-          RUNTIME=$(xcrun simctl list runtimes \
-            | grep "iOS" \
-            | grep -v "unavailable" \
-            | head -n 1 \
-            | awk -F '[()]' '{print $2}')
+          echo "=== Available iOS Runtimes ==="
+          xcrun simctl list runtimes
 
-          echo "Selected runtime: $RUNTIME"
+          echo "=== Available Device Types ==="
+          xcrun simctl list devicetypes | grep "iPhone"
 
-          # Remove old simulator if it exists
-          xcrun simctl delete "CI-iPhone" || true
+          # Get the first available iOS runtime identifier
+          RUNTIME_ID=$(xcrun simctl list runtimes -j | python3 -c '
+          import json, sys
 
-          # Create new simulator
-          UDID=$(xcrun simctl create "CI-iPhone" "iPhone 16" "$RUNTIME")
-          echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+          data = json.load(sys.stdin)
+          for runtime in data["runtimes"]:
+            if runtime.get("isAvailable") and runtime["name"].startswith("iOS"):
+          print(runtime["identifier"])
+          break')
 
-          # Boot simulator
-          xcrun simctl boot "$UDID"
+          echo "Selected Runtime ID: $RUNTIME_ID"
 
-          # Wait until boot completes
-          xcrun simctl bootstatus "$UDID" -b
-
-          # Open Simulator app (optional but helps stability)
-          open -a Simulator
-
-          # Unlock simulator
-          xcrun simctl ui "$UDID" appearance light || true
-
-          echo "Booted simulator UDID: $UDID"
-
-      # =====================================================
-      # START APPIUM SERVER
-      # =====================================================
-      - name: Start Appium Server
-        run: |
-          mkdir -p appium-logs
-
-          nohup appium \
-            --log-level debug \
-            --log-timestamp \
-            > appium-logs/server.log 2>&1 &
-
-          echo $! > appium.pid
-
-          echo "Waiting for Appium to start..."
-          for i in {1..30}; do
-            if curl -sf http://127.0.0.1:4723/status > /dev/null; then
-              echo "Appium started successfully"
-              break
-            fi
-            echo "Waiting for Appium ($i/30)..."
-            sleep 1
-          done
-
-          echo "=== Appium Status ==="
-          curl -s http://127.0.0.1:4723/status | python3 -m json.tool || true
-
-      # =====================================================
-      # VERIFY SIMULATOR
-      # =====================================================
-      - name: Verify Simulator
-        run: |
-          xcrun simctl list devices | grep Booted
-          echo "Simulator UDID: $SIMULATOR_UDID"
-
-      # =====================================================
-      # BUILD PROJECT
-      # =====================================================
-      - name: Build Project
-        run: |
-          mvn clean test-compile -DskipTests \
-            -Dmaven.artifact.threads=10
-
-      # =====================================================
-      # RUN TESTS
-      # =====================================================
-      - name: Run All Tagged Tests
-        id: run-all-tests
-        continue-on-error: true
-        run: |
-          mvn clean test \
-            "-Dtest=runners.TestRunner" \
-            "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
-            "-DexecutionType=local-emulator" \
-            "-Dappium.host=127.0.0.1" \
-            "-Dappium.port=4723" \
-            "-Dplatform=iOS" \
-            "-DdeviceName=iPhone 16" \
-            "-Dudid=$SIMULATOR_UDID"
-
-      # =====================================================
-      # GENERATE ALLURE HTML REPORT
-      # =====================================================
-      - name: Generate Allure HTML Report
-        if: always()
-        uses: simple-elf/allure-report-action@master
-        with:
-          allure_results: target/allure-results
-          allure_report: allure-report
-          allure_history: allure-history
-
-      # =====================================================
-      # UPLOAD ALLURE HTML REPORT
-      # =====================================================
-      - name: Upload Allure HTML Report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: allure-html-report-ios
-          path: allure-report
-          retention-days: 30
-          if-no-files-found: warn
-
-      # =====================================================
-      # UPLOAD TEST REPORTS
-      # =====================================================
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: test-reports-ios
-          path: test-output
-          retention-days: 30
-          if-no-files-found: warn
-
-      # =====================================================
-      # UPLOAD SCREENSHOTS
-      # =====================================================
-      - name: Upload Screenshots
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: screenshots-ios
-          path: test-output/screenshots
-          retention-days: 14
-          if-no-files-found: warn
-
-      # =====================================================
-      # UPLOAD APPIUM LOGS
-      # =====================================================
-      - name: Upload Appium Logs
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: appium-logs-ios
-          path: appium-logs
-          retention-days: 7
-          if-no-files-found: warn
-
-      # =====================================================
-      # CLEANUP
-      # =====================================================
-      - name: Stop Services
-        if: always()
-        continue-on-error: true
-        run: |
-          # Stop Appium
-          if [ -f appium.pid ]; then
-            kill "$(cat appium.pid)" || true
-          fi
-          pkill -f appium || true
-
-          # Shutdown simulator
-          if [ -n "$SIMULATOR_UDID" ]; then
-            xcrun simctl shutdown "$SIMULATOR_UDID" || true
-            xcrun simctl delete "$SIMULATOR_UDID" || true
+          if [ -z "$RUNTIME_ID" ]; then
+            echo "No available iOS runtime found."
+            exit 1
           fi
 
-      # =====================================================
-      # SUMMARY
-      # =====================================================
-      - name: Report Summary
-        if: always()
-        run: |
-          echo "## iOS Simulator Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Execution Type:** local-ios" >> $GITHUB_STEP_SUMMARY
-          echo "- **Simulator:** iPhone 16" >> $GITHUB_STEP_SUMMARY
-          echo "- **Result:** ${{ steps.run-all-tests.outcome }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          # Get the iPhone 16 device type identifier
+          DEVICE_TYPE_ID=$(xcrun simctl list devicetypes -j | python3 -c '
+          import json, sys
+          
+          data = json.load(sys.stdin)
+          for device in data["devicetypes"]:
+              if device["name"] == "iPhone 16":
+                  print(device["identifier"])
+                  break
+          ')
+          
+                    # Fallback to iPhone 15 if iPhone 16 is not available
+                    if [ -z "$DEVICE_TYPE_ID" ]; then
+                      DEVICE_TYPE_ID=$(xcrun simctl list devicetypes -j | python3 -c '
+          import json, sys
+          
+          data = json.load(sys.stdin)
+          for device in data["devicetypes"]:
+              if device["name"] == "iPhone 15":
+                  print(device["identifier"])
+                  break
+          ')
+                      DEVICE_NAME="iPhone 15"
+                    else
+                      DEVICE_NAME="iPhone 16"
+                    fi
+          
+                    echo "Selected Device Type ID: $DEVICE_TYPE_ID"
+                    echo "Selected Device Name: $DEVICE_NAME"
+          
+                    if [ -z "$DEVICE_TYPE_ID" ]; then
+                      echo "No supported iPhone device type found."
+                      exit 1
+                    fi
+          
+                    # Delete any existing simulator with the same name
+                    xcrun simctl delete "CI-iPhone" || true
+          
+                    # Create the simulator
+                    UDID=$(xcrun simctl create "CI-iPhone" "$DEVICE_TYPE_ID" "$RUNTIME_ID")
+          
+                    if [ -z "$UDID" ]; then
+                      echo "Failed to create simulator."
+                      exit 1
+                    fi
+          
+                    echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
+                    echo "IOS_DEVICE_NAME=$DEVICE_NAME" >> "$GITHUB_ENV"
+          
+                    echo "Created Simulator UDID: $UDID"
+          
+                    # Boot the simulator
+                    xcrun simctl boot "$UDID"
+          
+                    # Wait until boot is complete
+                    xcrun simctl bootstatus "$UDID" -b
+          
+                    # Open Simulator app (optional but improves stability)
+                    open -a Simulator || true
+          
+                    echo "Booted simulator UDID: $UDID"
+          
+                - name: Start Appium Server
+                  run: |
+                    mkdir -p appium-logs
+          
+                    nohup appium \
+                      --log-level debug \
+                      --log-timestamp \
+                      > appium-logs/server.log 2>&1 &
+          
+                    echo $! > appium.pid
+          
+                    echo "Waiting for Appium to start..."
+                    for i in {1..30}; do
+                      if curl -sf http://127.0.0.1:4723/status > /dev/null; then
+                        echo "Appium started successfully"
+                        break
+                      fi
+                      echo "Waiting for Appium ($i/30)..."
+                      sleep 1
+                    done
+          
+                    echo "=== Appium Status ==="
+                    curl -s http://127.0.0.1:4723/status | python3 -m json.tool || true
+          
+                - name: Verify Simulator
+                  run: |
+                    xcrun simctl list devices | grep Booted
+                    echo "Simulator UDID: $SIMULATOR_UDID"
+                    echo "Device Name: $IOS_DEVICE_NAME"
+          
+                - name: Build Project
+                  run: |
+                    mvn clean test-compile -DskipTests \
+                      -Dmaven.artifact.threads=10
+          
+                - name: Run All Tagged Tests
+                  id: run-all-tests
+                  continue-on-error: true
+                  run: |
+                    mvn clean test \
+                      "-Dtest=runners.TestRunner" \
+                      "-Dcucumber.filter.tags=@smoke or @cart or @login or @prod or @nav" \
+                      "-DexecutionType=local-ios" \
+                      "-Dappium.host=127.0.0.1" \
+                      "-Dappium.port=4723" \
+                      "-Dplatform=iOS" \
+                      "-DdeviceName=$IOS_DEVICE_NAME" \
+                      "-Dudid=$SIMULATOR_UDID"
+          
+                - name: Generate Allure HTML Report
+                  if: always()
+                  uses: simple-elf/allure-report-action@master
+                  with:
+                    allure_results: target/allure-results
+                    allure_report: allure-report
+                    allure_history: allure-history
+          
+                - name: Upload Allure HTML Report
+                  if: always()
+                  uses: actions/upload-artifact@v5
+                  with:
+                    name: allure-html-report-ios
+                    path: allure-report
+                    retention-days: 30
+                    if-no-files-found: warn
+          
+                - name: Upload Test Reports
+                  if: always()
+                  uses: actions/upload-artifact@v5
+                  with:
+                    name: test-reports-ios
+                    path: test-output
+                    retention-days: 30
+                    if-no-files-found: warn
+          
+                - name: Upload Screenshots
+                  if: always()
+                  uses: actions/upload-artifact@v5
+                  with:
+                    name: screenshots-ios
+                    path: test-output/screenshots
+                    retention-days: 14
+                    if-no-files-found: warn
+          
+                - name: Upload Appium Logs
+                  if: always()
+                  uses: actions/upload-artifact@v5
+                  with:
+                    name: appium-logs-ios
+                    path: appium-logs
+                    retention-days: 7
+                    if-no-files-found: warn
+          
+                - name: Stop Services
+                  if: always()
+                  continue-on-error: true
+                  run: |
+                    if [ -f appium.pid ]; then
+                      kill "$(cat appium.pid)" || true
+                    fi
+                    pkill -f appium || true
+          
+                    if [ -n "$SIMULATOR_UDID" ]; then
+                      xcrun simctl shutdown "$SIMULATOR_UDID" || true
+                      xcrun simctl delete "$SIMULATOR_UDID" || true
+                    fi
+          
+                - name: Report Summary
+                  if: always()
+                  run: |
+                    echo "## iOS Simulator Test Summary" >> $GITHUB_STEP_SUMMARY
+                    echo "- **Execution Type:** local-ios" >> $GITHUB_STEP_SUMMARY
+                    echo "- **Simulator:** $IOS_DEVICE_NAME" >> $GITHUB_STEP_SUMMARY
+                    echo "- **Result:** ${{ steps.run-all-tests.outcome }}" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "[View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          
